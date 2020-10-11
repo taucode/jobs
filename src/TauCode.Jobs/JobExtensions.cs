@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using TauCode.Extensions;
 
 // todo clean up
 namespace TauCode.Jobs
@@ -14,7 +15,7 @@ namespace TauCode.Jobs
 
         static JobExtensions()
         {
-            Never = $"{NeverYear}-01-01Z".ToUtcDayOffset();
+            Never = $"{NeverYear}-01-01Z".ToUtcDateOffset();
         }
 
         //public static bool IsNever(this DueTimeInfo dueTimeInfo) => dueTimeInfo.DueTime.Equals(Never);

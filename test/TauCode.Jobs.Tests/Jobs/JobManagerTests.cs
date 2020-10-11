@@ -1,9 +1,14 @@
-﻿using System;
+﻿using NUnit.Framework;
+using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
+using TauCode.Extensions;
+using TauCode.Infrastructure.Time;
+using TauCode.Jobs.Exceptions;
+using TauCode.Jobs.Schedules;
 
 // todo clean up
 namespace TauCode.Jobs.Tests.Jobs
@@ -242,7 +247,7 @@ namespace TauCode.Jobs.Tests.Jobs
             // Assert
             Assert.That(job.Name, Is.EqualTo("job1"));
 
-            var now = TimeProvider.GetCurrent();
+            var now = TimeProvider.GetCurrentTime();
             Assert.That(job.Schedule.GetDueTimeAfter(now), Is.EqualTo(JobExtensions.Never));
             Assert.That(job.Routine, Is.Not.Null);
             Assert.That(job.Parameter, Is.Null);
@@ -485,7 +490,7 @@ namespace TauCode.Jobs.Tests.Jobs
             // Arrange
             using IJobManager jobManager = TestHelper.CreateJobManager(true);
 
-            var start = "2020-01-01Z".ToUtcDayOffset();
+            var start = "2020-01-01Z".ToUtcDateOffset();
             TimeProvider.Override(ShiftedTimeProvider.CreateTimeMachine(start));
 
 
@@ -502,7 +507,7 @@ namespace TauCode.Jobs.Tests.Jobs
             {
                 for (var i = 0; i < 100; i++)
                 {
-                    var time = TimeProvider.GetCurrent();
+                    var time = TimeProvider.GetCurrentTime();
                     await output.WriteLineAsync($"Iteration {i}: {time.Second:D2}:{time.Millisecond:D3}");
 
                     try
@@ -511,7 +516,7 @@ namespace TauCode.Jobs.Tests.Jobs
                     }
                     catch (TaskCanceledException)
                     {
-                        time = TimeProvider.GetCurrent();
+                        time = TimeProvider.GetCurrentTime();
                         await output.WriteLineAsync($"Canceled! {time.Second:D2}:{time.Millisecond:D3}");
                         throw;
                     }

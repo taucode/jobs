@@ -1,6 +1,8 @@
-﻿using System;
+﻿using NUnit.Framework;
+using System;
 using System.Threading.Tasks;
-using NUnit.Framework;
+using TauCode.Extensions;
+using TauCode.Infrastructure.Time;
 
 namespace TauCode.Jobs.Tests.Jobs
 {
@@ -13,7 +15,7 @@ namespace TauCode.Jobs.Tests.Jobs
             // Arrange
             using IJobManager jobManager = TestHelper.CreateJobManager(true);
 
-            var start = "2000-01-01Z".ToUtcDayOffset();
+            var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
             TimeProvider.Override(timeMachine);
 
@@ -43,7 +45,7 @@ namespace TauCode.Jobs.Tests.Jobs
             // Arrange
             using IJobManager jobManager = TestHelper.CreateJobManager(true);
 
-            var start = "2000-01-01Z".ToUtcDayOffset();
+            var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
             TimeProvider.Override(timeMachine);
 

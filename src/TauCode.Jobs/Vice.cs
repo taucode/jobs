@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TauCode.Extensions;
+using TauCode.Infrastructure.Time;
 using TauCode.Jobs.Exceptions;
 using TauCode.Working;
 
@@ -39,7 +40,7 @@ namespace TauCode.Jobs
         {
             _logger.Debug("Entered method", nameof(DoWork));
 
-            var now = TimeProvider.GetCurrent();
+            var now = TimeProvider.GetCurrentTime();
             var employeesToWakeUp = new List<Tuple<Employee, DueTimeInfo>>();
             var earliest = JobExtensions.Never;
 
@@ -65,7 +66,7 @@ namespace TauCode.Jobs
                     }
                     else
                     {
-                        earliest = DateTimeExtensions.Min(earliest, dueTime);
+                        earliest = DateTimeOffsetExtensions.Min(earliest, dueTime);
                     }
                 }
             }
@@ -114,7 +115,7 @@ namespace TauCode.Jobs
                     var nextDueTime = nextDueTimeInfo.Value.GetEffectiveDueTime();
                     if (nextDueTime > now)
                     {
-                        earliest = DateTimeExtensions.Min(earliest, nextDueTime);
+                        earliest = DateTimeOffsetExtensions.Min(earliest, nextDueTime);
                     }
                 }
             }
