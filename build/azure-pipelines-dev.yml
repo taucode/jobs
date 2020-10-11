@@ -1,0 +1,70 @@
+# ASP.NET
+# Build and test ASP.NET projects.
+# Add steps that publish symbols, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/apps/aspnet/build-aspnet-4
+
+trigger:
+- dev
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+  packageName: '_set_by_task_'
+  nuspecName: '_set_by_task_'
+
+steps:
+- task: NuGetToolInstaller@1
+
+- task: NuGetCommand@2
+  inputs:
+    command: 'restore'
+    restoreSolution: '**/*.sln'
+    feedsToUse: 'config'
+    nugetConfigPath: 'nuget.config'
+
+- task: VSBuild@1
+  inputs:
+    solution: '$(solution)'
+    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
+
+- task: VSTest@2
+  inputs:
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
+
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      $a = cmd /r dir /b nuget\*.nuspec
+      $echo_string = "##vso[task.setvariable variable=nuspecName]$a"
+      echo $echo_string
+      Write-Host "nuspecName is:"
+      Write-Host $(nuspecName)
+
+- task: NuGetCommand@2
+  inputs:
+    command: 'pack'
+    packagesToPack: 'nuget\$(nuspecName)'
+    versioningScheme: 'off'
+
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      $a = cmd /r dir /b $(Build.ArtifactStagingDirectory)\*.nupkg
+      $echo_string = "##vso[task.setvariable variable=packageName]$a"
+      echo $echo_string
+      Write-Host "packageName is:"
+      Write-Host $(packageName)
+
+- task: NuGetCommand@2
+  inputs:
+    command: 'custom'
+    arguments: 'push $(Build.ArtifactStagingDirectory)\$(packageName) -ApiKey az_dummy -Source "TauCode"'
