@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using TauCode.Jobs.Instruments;
 using TauCode.Jobs.Schedules;
+using TauCode.Working;
 
 namespace TauCode.Jobs
 {

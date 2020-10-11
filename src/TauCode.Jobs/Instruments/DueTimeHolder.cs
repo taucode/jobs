@@ -1,4 +1,5 @@
 ﻿using System;
+using TauCode.Infrastructure.Time;
 using TauCode.Jobs.Exceptions;
 using TauCode.Jobs.Schedules;
 using TauCode.Working;
@@ -90,7 +91,7 @@ namespace TauCode.Jobs.Instruments
                 {
                     this.CheckNotDisposed();
 
-                    var now = TimeProvider.GetCurrent();
+                    var now = TimeProvider.GetCurrentTime();
                     if (now > value)
                     {
                         throw new JobException("Cannot override due time in the past."); // already came
@@ -103,7 +104,7 @@ namespace TauCode.Jobs.Instruments
 
         internal void UpdateScheduleDueTime()
         {
-            var now = TimeProvider.GetCurrent();
+            var now = TimeProvider.GetCurrentTime();
             lock (_lock)
             {
                 if (_isDisposed)

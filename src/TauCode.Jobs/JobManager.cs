@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using TauCode.Jobs.Exceptions;
+using TauCode.Working;
+using TauCode.Working.Exceptions;
 
 namespace TauCode.Jobs
 {

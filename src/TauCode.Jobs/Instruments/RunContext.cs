@@ -4,6 +4,9 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TauCode.Extensions;
+using TauCode.Infrastructure.Time;
+using TauCode.Working;
 
 namespace TauCode.Jobs.Instruments
 {
@@ -55,7 +58,7 @@ namespace TauCode.Jobs.Instruments
             var dueTime = dueTimeInfo.GetEffectiveDueTime();
             var dueTimeWasOverridden = dueTimeInfo.IsDueTimeOverridden();
 
-            var now = TimeProvider.GetCurrent();
+            var now = TimeProvider.GetCurrentTime();
 
             _runInfoBuilder = new JobRunInfoBuilder(
                 initiator.JobRunsHolder.Count,
@@ -131,7 +134,7 @@ namespace TauCode.Jobs.Instruments
                     break;
             }
 
-            var now = TimeProvider.GetCurrent();
+            var now = TimeProvider.GetCurrentTime();
 
             _runInfoBuilder.EndTime = now;
             _runInfoBuilder.Status = status;

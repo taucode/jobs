@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.Serialization;
+using TauCode.Working.Exceptions;
 
 namespace TauCode.Jobs.Exceptions
 {

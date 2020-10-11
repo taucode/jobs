@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TauCode.Infrastructure.Time;
 
 // todo clean up
 namespace TauCode.Jobs.Tests
@@ -105,7 +106,7 @@ namespace TauCode.Jobs.Tests
             CancellationToken token = default)
         {
             var timeout = TimeSpan.FromSeconds(seconds);
-            var now = timeProvider.GetCurrent();
+            var now = timeProvider.GetCurrentTime();
 
             var elapsed = now - start;
             if (elapsed >= timeout)
@@ -118,7 +119,7 @@ namespace TauCode.Jobs.Tests
             {
                 await Task.Delay(1, token);
 
-                now = timeProvider.GetCurrent();
+                now = timeProvider.GetCurrentTime();
 
                 elapsed = now - start;
                 if (elapsed >= timeout)
