@@ -10,7 +10,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Name_JustCreatedJob_ReturnsValidName()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var job = jobManager.Create("my-job");
 
@@ -25,7 +25,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Name_JobIsEnabled_ReturnsValidName()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
             var job = jobManager.Create("my-job");
 
             job.IsEnabled = true;
@@ -41,7 +41,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Name_JobIsDisabled_ReturnsValidName()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
             var job = jobManager.Create("my-job");
 
             job.IsEnabled = true;
@@ -62,7 +62,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Name_JobIsRunningOrStopped_ReturnsValidName()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var job = jobManager.Create("my-job");
 
@@ -86,7 +86,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Name_JobIsDisposed_ReturnsValidName()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var job = jobManager.Create("my-job");
             job.Dispose();

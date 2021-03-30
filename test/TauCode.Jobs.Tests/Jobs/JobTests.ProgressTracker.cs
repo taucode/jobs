@@ -1,8 +1,8 @@
 ﻿using NUnit.Framework;
+using System;
 using System.Threading.Tasks;
 using TauCode.Extensions;
 using TauCode.Infrastructure.Time;
-using TauCode.Jobs.Exceptions;
 using TauCode.Jobs.Schedules;
 
 namespace TauCode.Jobs.Tests.Jobs
@@ -14,7 +14,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void ProgressTracker_JustCreated_EqualsToNull()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -33,7 +33,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void ProgressTracker_ValueIsSet_EqualsToThatValue()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -71,7 +71,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task ProgressTracker_SetOnTheFly_RunsWithOldParameterAndNextTimeRunsWithNewProgressTracker()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -129,7 +129,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task ProgressTracker_SetAfterFirstRun_NextTimeRunsWithNewProgressTracker()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -182,7 +182,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void ProgressTracker_JobIsDisposed_CanBeRead()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -203,7 +203,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void ProgressTracker_JobIsDisposedThenValueIsSet_ThrowsJobObjectDisposedException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -217,7 +217,7 @@ namespace TauCode.Jobs.Tests.Jobs
             // Act
             job.ProgressTracker = tracker1;
             job.Dispose();
-            var ex = Assert.Throws<JobObjectDisposedException>(() => job.ProgressTracker = tracker2);
+            var ex = Assert.Throws<ObjectDisposedException>(() => job.ProgressTracker = tracker2);
 
             // Assert
             Assert.That(job.ProgressTracker, Is.EqualTo(tracker1));

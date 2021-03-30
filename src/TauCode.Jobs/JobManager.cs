@@ -1,15 +1,14 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
-using TauCode.Jobs.Exceptions;
 using TauCode.Working;
-using TauCode.Working.Exceptions;
 
 namespace TauCode.Jobs
 {
     public class JobManager : IJobManager
     {
         #region Fields
-        
+
         private readonly Vice _vice;
 
         #endregion
@@ -25,6 +24,11 @@ namespace TauCode.Jobs
 
         #region Private
 
+        private InvalidOperationException CreateCannotWorkException(string operationName)
+        {
+            throw new InvalidOperationException($"Cannot perform operation '{operationName}'. Job Manager is not running.");
+        }
+
         private void CheckJobName(string jobName, string jobNameParamName)
         {
             if (string.IsNullOrWhiteSpace(jobName))
@@ -33,19 +37,18 @@ namespace TauCode.Jobs
             }
         }
 
-        private void CheckCanWork()
+        private void CheckCanWork(string operationName)
         {
             if (this.IsDisposed)
             {
-                throw new JobObjectDisposedException(typeof(IJobManager).FullName);
+                throw new ObjectDisposedException(this.GetType().FullName);
             }
 
             if (!this.IsRunning)
             {
-                throw new InvalidJobOperationException($"'{typeof(IJobManager).FullName}' not started.");
+                throw this.CreateCannotWorkException(operationName);
             }
         }
-
 
         #endregion
 
@@ -59,11 +62,11 @@ namespace TauCode.Jobs
             }
             catch (ObjectDisposedException)
             {
-                throw new JobObjectDisposedException($"{typeof(IJobManager).FullName}");
+                throw new ObjectDisposedException(this.GetType().FullName);
             }
-            catch (InappropriateWorkerStateException)
+            catch (InvalidOperationException ex)
             {
-                throw new InvalidJobOperationException($"'{typeof(IJobManager).FullName}' is already running.");
+                throw new InvalidOperationException("Cannot start Job Manager.", ex);
             }
         }
 
@@ -74,23 +77,29 @@ namespace TauCode.Jobs
         public IJob Create(string jobName)
         {
             this.CheckJobName(jobName, nameof(jobName));
-            this.CheckCanWork();
+            this.CheckCanWork(nameof(Create));
 
             return _vice.CreateJob(jobName);
         }
 
         public IReadOnlyList<string> GetNames()
         {
-            this.CheckCanWork();
+            this.CheckCanWork(nameof(GetNames));
             return _vice.GetJobNames();
         }
 
         public IJob Get(string jobName)
         {
             this.CheckJobName(jobName, nameof(jobName));
-            this.CheckCanWork();
+            this.CheckCanWork(nameof(Get));
 
             return _vice.GetJob(jobName);
+        }
+
+        public ILogger Logger
+        {
+            get => _vice.Logger;
+            set => _vice.Logger = value;
         }
 
         #endregion
@@ -98,18 +107,6 @@ namespace TauCode.Jobs
         #region IDisposable Members
 
         public void Dispose() => _vice.Dispose();
-
-        #endregion
-
-        #region Internal
-
-        internal bool IsLoggingEnabled
-        {
-            get => _vice.IsLoggingEnabled;
-            set => _vice.EnableLogging(value);
-        }
-
-        internal bool StartedWorking() => _vice.StartedWorking();
 
         #endregion
     }
