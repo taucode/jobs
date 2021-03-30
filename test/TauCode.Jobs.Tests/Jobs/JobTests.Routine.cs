@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using TauCode.Extensions;
 using TauCode.Infrastructure.Time;
-using TauCode.Jobs.Exceptions;
 using TauCode.Jobs.Schedules;
 
 namespace TauCode.Jobs.Tests.Jobs
@@ -19,7 +18,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task Routine_JustCreatedJob_NotNullAndRunsSuccessfully()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -56,7 +55,7 @@ namespace TauCode.Jobs.Tests.Jobs
                 sb.AppendLine(ex.ToString());
                 sb.AppendLine("*** Log: ***");
 
-                var log = _logWriter.ToString();
+                var log = this.CurrentLog;
 
                 sb.AppendLine(log);
 
@@ -68,7 +67,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Routine_SetNull_ThrowsArgumentNullException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -92,7 +91,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task Routine_SetOnTheFly_CompletesWithOldRoutineAndThenStartsWithNewRoutine()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -160,7 +159,7 @@ namespace TauCode.Jobs.Tests.Jobs
                 sb.AppendLine(ex.ToString());
                 sb.AppendLine("*** Log: ***");
 
-                var log = _logWriter.ToString();
+                var log = this.CurrentLog;
 
                 sb.AppendLine(log);
 
@@ -172,7 +171,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Routine_SetValidValueForEnabledOrDisabledJob_SetsValue()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -204,7 +203,6 @@ namespace TauCode.Jobs.Tests.Jobs
 
             // Assert
             Assert.That(updatedRoutine1, Is.SameAs(routine1));
-
             Assert.That(updatedRoutine2, Is.SameAs(routine2));
         }
 
@@ -217,7 +215,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task Routine_SetAfterPreviousRunCompleted_SetsValueAndRunsWithIt()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
             var job = jobManager.Create("my-job");
 
             var start = "2000-01-01Z".ToUtcDateOffset();
@@ -275,7 +273,7 @@ namespace TauCode.Jobs.Tests.Jobs
                 sb.AppendLine(ex.ToString());
                 sb.AppendLine("*** Log: ***");
 
-                var log = _logWriter.ToString();
+                var log = this.CurrentLog;
 
                 sb.AppendLine(log);
 
@@ -287,7 +285,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task Routine_Throws_LogsFaultedTask()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -336,7 +334,7 @@ namespace TauCode.Jobs.Tests.Jobs
                 Assert.That(run.Exception, Is.SameAs(exception));
                 Assert.That(run.Output, Does.Contain(exception.ToString()));
 
-                var log = _logWriter.ToString();
+                var log = this.CurrentLog;
 
                 Assert.That(log, Does.Contain("Routine has thrown an exception."));
                 Assert.That(log,
@@ -349,7 +347,7 @@ namespace TauCode.Jobs.Tests.Jobs
                 sb.AppendLine(ex.ToString());
                 sb.AppendLine("*** Log: ***");
 
-                var log = _logWriter.ToString();
+                var log = this.CurrentLog;
 
                 sb.AppendLine(log);
 
@@ -361,7 +359,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task Routine_ReturnsCanceledTask_LogsCanceledTask()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -414,8 +412,9 @@ namespace TauCode.Jobs.Tests.Jobs
                 Assert.That(run.Status, Is.EqualTo(JobRunStatus.Canceled));
                 Assert.That(run.Exception, Is.Null);
 
-                var log = _logWriter.ToString();
-                Assert.That(log,
+                var log = this.CurrentLog;
+                Assert.That(
+                    log,
                     Does.Contain($"Job 'my-job' completed synchronously. Reason of start was 'ScheduleDueTime'."));
             }
             catch (Exception ex)
@@ -425,7 +424,7 @@ namespace TauCode.Jobs.Tests.Jobs
                 sb.AppendLine(ex.ToString());
                 sb.AppendLine("*** Log: ***");
 
-                var log = _logWriter.ToString();
+                var log = this.CurrentLog;
 
                 sb.AppendLine(log);
 
@@ -437,7 +436,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task Routine_ReturnsFaultedTask_LogsFaultedTask()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
             var job = jobManager.Create("my-job");
 
             var start = "2000-01-01Z".ToUtcDateOffset();
@@ -485,7 +484,7 @@ namespace TauCode.Jobs.Tests.Jobs
                 Assert.That(run.Exception, Is.SameAs(exception));
                 Assert.That(run.Output, Does.Contain(exception.ToString()));
 
-                var log = _logWriter.ToString();
+                var log = this.CurrentLog;
 
                 Assert.That(log,
                     Does.Contain($"Job 'my-job' completed synchronously. Reason of start was 'ScheduleDueTime'."));
@@ -497,7 +496,8 @@ namespace TauCode.Jobs.Tests.Jobs
                 sb.AppendLine(ex.ToString());
                 sb.AppendLine("*** Log: ***");
 
-                var log = _logWriter.ToString();
+                //var log = _logWriter.ToString();
+                var log = this.CurrentLog;
 
                 sb.AppendLine(log);
 
@@ -509,7 +509,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task Routine_ReturnsCompletedTask_LogsCompletedTask()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
             var job = jobManager.Create("my-job");
 
             var start = "2000-01-01Z".ToUtcDateOffset();
@@ -552,9 +552,10 @@ namespace TauCode.Jobs.Tests.Jobs
 
             Assert.That(run.Status, Is.EqualTo(JobRunStatus.Completed));
 
-            var log = _logWriter.ToString();
+            var log = this.CurrentLog;
 
-            Assert.That(log,
+            Assert.That(
+                log,
                 Does.Contain($"Job 'my-job' completed synchronously. Reason of start was 'ScheduleDueTime'."));
         }
 
@@ -562,7 +563,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Routine_Disposed_CanBeRead()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -607,7 +608,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Routine_DisposedAndSet_ThrowsJobObjectDisposedException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -641,7 +642,7 @@ namespace TauCode.Jobs.Tests.Jobs
 
             var updatedRoutineAfterDisposal = job.Routine;
 
-            var ex = Assert.Throws<JobObjectDisposedException>(() => job.Routine = routine1);
+            var ex = Assert.Throws<ObjectDisposedException>(() => job.Routine = routine1);
 
             // Assert
             Assert.That(updatedRoutine1, Is.SameAs(routine1));

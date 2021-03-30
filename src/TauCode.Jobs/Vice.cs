@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using TauCode.Extensions;
 using TauCode.Infrastructure.Time;
-using TauCode.Jobs.Exceptions;
 using TauCode.Working;
 
 namespace TauCode.Jobs
@@ -17,9 +16,6 @@ namespace TauCode.Jobs
         private readonly Dictionary<string, Employee> _employees;
         private readonly object _lock;
 
-        private readonly ObjectLogger _logger; // todo: WorkerBase will have its own ObjectLogger.
-        private bool _startedWorking;
-
         #endregion
 
         #region Constructor
@@ -28,8 +24,6 @@ namespace TauCode.Jobs
         {
             _employees = new Dictionary<string, Employee>();
             _lock = new object();
-
-            _logger = new ObjectLogger(this, null);
         }
 
         #endregion
@@ -38,7 +32,7 @@ namespace TauCode.Jobs
 
         protected override Task<TimeSpan> DoWork(CancellationToken token)
         {
-            _logger.Debug("Entered method", nameof(DoWork));
+            this.Logger.LogDebugEx(null, "Entered method", this.GetType(), nameof(DoWork));
 
             var now = TimeProvider.GetCurrentTime();
             var employeesToWakeUp = new List<Tuple<Employee, DueTimeInfo>>();
@@ -46,8 +40,6 @@ namespace TauCode.Jobs
 
             lock (_lock)
             {
-                _startedWorking = true;
-
                 foreach (var employee in _employees.Values)
                 {
                     var info = employee.GetDueTimeInfoForVice(false);
@@ -82,26 +74,34 @@ namespace TauCode.Jobs
                 switch (startResult)
                 {
                     case JobStartResult.Started:
-                        _logger.Information(
+                        this.Logger.LogInformationEx(
+                            null,
                             $"Job '{employee.Name}' was started. Reason: '{reason}'.",
+                            this.GetType(),
                             nameof(DoWork));
                         break;
 
                     case JobStartResult.CompletedSynchronously:
-                        _logger.Information(
+                        this.Logger.LogInformationEx(
+                            null,
                             $"Job '{employee.Name}' completed synchronously. Reason of start was '{reason}'.",
+                            this.GetType(),
                             nameof(DoWork));
                         break;
 
                     case JobStartResult.AlreadyRunning:
-                        _logger.Information(
+                        this.Logger.LogInformationEx(
+                            null,
                             $"Job '{employee.Name}' already running. Attempted to start due to reason '{reason}'.",
+                            this.GetType(),
                             nameof(DoWork));
                         break;
 
                     case JobStartResult.Disabled:
-                        _logger.Information(
+                        this.Logger.LogInformationEx(
+                            null,
                             $"Job '{employee.Name}' is disabled. Attempted to start due to reason '{reason}'.",
+                            this.GetType(),
                             nameof(DoWork));
                         break;
                 }
@@ -122,7 +122,11 @@ namespace TauCode.Jobs
 
             var vacationTimeout = earliest - now;
 
-            _logger.Debug($"Going to vacation, length is '{vacationTimeout}'.", nameof(DoWork));
+            this.Logger.LogDebugEx(
+                null,
+                $"Going to vacation, length is '{vacationTimeout}'.",
+                this.GetType(),
+                nameof(DoWork));
 
             return Task.FromResult(vacationTimeout);
         }
@@ -141,6 +145,8 @@ namespace TauCode.Jobs
             }
         }
 
+        public override bool IsPausingSupported => false;
+
         #endregion
 
         #region Internal
@@ -151,14 +157,10 @@ namespace TauCode.Jobs
             {
                 if (_employees.ContainsKey(jobName))
                 {
-                    throw new InvalidJobOperationException($"Job '{jobName}' already exists.");
+                    throw new InvalidOperationException($"Job '{jobName}' already exists.");
                 }
 
                 var employee = new Employee(this, jobName);
-                if (this.IsLoggingEnabled)
-                {
-                    employee.EnableLogging(true);
-                }
 
                 _employees.Add(employee.Name, employee);
 
@@ -182,7 +184,7 @@ namespace TauCode.Jobs
                 var employee = _employees.GetValueOrDefault(jobName);
                 if (employee == null)
                 {
-                    throw new InvalidJobOperationException($"Job not found: '{jobName}'.");
+                    throw new InvalidOperationException($"Job not found: '{jobName}'.");
                 }
 
                 return employee.GetJob();
@@ -199,30 +201,13 @@ namespace TauCode.Jobs
 
         internal void PulseWork(string pulseReason)
         {
-            _logger.Debug(pulseReason, nameof(PulseWork));
-            this.AdvanceWorkGeneration();
-        }
+            this.Logger.LogDebugEx(
+                null,
+                pulseReason,
+                this.GetType(),
+                nameof(PulseWork));
 
-        internal bool IsLoggingEnabled => _logger.IsEnabled;
-
-        internal void EnableLogging(bool enable)
-        {
-            _logger.IsEnabled = enable;
-            lock (_lock)
-            {
-                foreach (var employee in _employees.Values)
-                {
-                    employee.EnableLogging(enable);
-                }
-            }
-        }
-
-        internal bool StartedWorking()
-        {
-            lock (_lock)
-            {
-                return _startedWorking;
-            }
+            this.AbortVacation();
         }
 
         #endregion

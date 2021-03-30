@@ -24,9 +24,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{984F07BF-A72
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{F8620798-B3FE-48D2-A65A-26C46FAF3942}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TauCode.Jobs", "src\TauCode.Jobs\TauCode.Jobs.csproj", "{38D6A298-58F1-401E-8F04-440018069F67}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TauCode.Jobs", "src\TauCode.Jobs\TauCode.Jobs.csproj", "{38D6A298-58F1-401E-8F04-440018069F67}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TauCode.Jobs.Tests", "test\TauCode.Jobs.Tests\TauCode.Jobs.Tests.csproj", "{EAE380FA-2B3E-402A-A9EB-7FD2A8375F16}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TauCode.Jobs.Tests", "test\TauCode.Jobs.Tests\TauCode.Jobs.Tests.csproj", "{EAE380FA-2B3E-402A-A9EB-7FD2A8375F16}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tau-lab", "tau-lab", "{1F535C32-49D4-4A10-9CB2-CF3BC9CCB52E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TauCode.Infrastructure.Lab", "tau-lab\TauCode.Infrastructure.Lab\TauCode.Infrastructure.Lab.csproj", "{703BB40A-E825-4731-8083-11EF5186F932}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,6 +46,10 @@ Global
 		{EAE380FA-2B3E-402A-A9EB-7FD2A8375F16}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EAE380FA-2B3E-402A-A9EB-7FD2A8375F16}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EAE380FA-2B3E-402A-A9EB-7FD2A8375F16}.Release|Any CPU.Build.0 = Release|Any CPU
+		{703BB40A-E825-4731-8083-11EF5186F932}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{703BB40A-E825-4731-8083-11EF5186F932}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{703BB40A-E825-4731-8083-11EF5186F932}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{703BB40A-E825-4731-8083-11EF5186F932}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -49,6 +57,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{38D6A298-58F1-401E-8F04-440018069F67} = {984F07BF-A72C-4BCC-961D-66430BC6E367}
 		{EAE380FA-2B3E-402A-A9EB-7FD2A8375F16} = {F8620798-B3FE-48D2-A65A-26C46FAF3942}
+		{703BB40A-E825-4731-8083-11EF5186F932} = {1F535C32-49D4-4A10-9CB2-CF3BC9CCB52E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {107BA82D-631E-4A7C-B9D4-6D8085EAD337}

@@ -16,7 +16,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void IsEnabled_JustCreatedJob_ReturnsFalse()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
             var job = jobManager.Create("my-job");
 
             // Act
@@ -45,7 +45,7 @@ namespace TauCode.Jobs.Tests.Jobs
             const double tA = 1.7;
             const double tB = 4.5;
 
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -122,7 +122,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void IsEnabled_ChangedToTrue_ReturnsTrue()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
             var job = jobManager.Create("my-job");
             job.IsEnabled = true;
 
@@ -137,7 +137,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void IsEnabled_ChangedToTrueThenToFalse_ReturnsFalse()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var job = jobManager.Create("my-job");
             job.IsEnabled = true;
@@ -154,7 +154,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void IsEnabled_WasTrueThenDisposed_ReturnsTrue()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var job = jobManager.Create("my-job");
             job.IsEnabled = true;
@@ -188,7 +188,7 @@ namespace TauCode.Jobs.Tests.Jobs
             const double tA = 1.9;
             const double tB = 4.5;
 
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -248,7 +248,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void IsEnabled_WasFalseThenDisposed_ReturnsFalse()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var job = jobManager.Create("my-job");
             job.Dispose();
@@ -264,16 +264,16 @@ namespace TauCode.Jobs.Tests.Jobs
         public void IsEnabled_IsDisposed_ThrowsJobObjectDisposedException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var job = jobManager.Create("my-job");
             job.Dispose();
 
             // Act
-            var ex = Assert.Throws<JobObjectDisposedException>(() => job.IsEnabled = true);
+            var ex = Assert.Throws<ObjectDisposedException>(() => job.IsEnabled = true);
 
             // Assert
-            Assert.That(ex, Has.Message.EqualTo("'my-job' is disposed."));
+            Assert.That(ex, Has.Message.StartWith("Cannot access a disposed object."));
             Assert.That(ex.ObjectName, Is.EqualTo("my-job"));
         }
     }

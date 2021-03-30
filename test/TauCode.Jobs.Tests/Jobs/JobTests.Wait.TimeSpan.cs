@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using TauCode.Extensions;
 using TauCode.Infrastructure.Time;
-using TauCode.Jobs.Exceptions;
 using TauCode.Jobs.Schedules;
 
 namespace TauCode.Jobs.Tests.Jobs
@@ -17,7 +16,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void WaitTimeSpan_WasRunningThenEnds_WaitsAndReturnsCompleted()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -45,7 +44,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void WaitTimeSpan_NegativeArgument_ThrowsArgumentOutOfRangeException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -74,7 +73,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void WaitTimeSpan_WasRunningThenCanceled_WaitsAndReturnsCanceled()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -108,7 +107,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task WaitTimeSpan_WasRunningThenFaulted_WaitsAndReturnsFaulted()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -140,7 +139,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void WaitTimeSpan_WasRunningThenJobIsDisposed_WaitsAndReturnsCanceled()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -174,7 +173,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void WaitTimeSpan_WasRunningThenJobManagerIsDisposed_WaitsAndReturnsCanceled()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -208,7 +207,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task WaitTimeSpan_WasRunningTooLong_WaitsAndReturnsNull()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -240,7 +239,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void WaitTimeSpan_NotRunning_ReturnsCompletedImmediately()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -265,7 +264,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void WaitTimeSpan_JobIsDisposed_ThrowsJobObjectDisposedException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -286,10 +285,11 @@ namespace TauCode.Jobs.Tests.Jobs
             job.Dispose();
 
             // Act
-            var ex = Assert.Throws<JobObjectDisposedException>(() => job.Wait(TimeSpan.FromMilliseconds(10)));
+            var ex = Assert.Throws<ObjectDisposedException>(() => job.Wait(TimeSpan.FromMilliseconds(10)));
 
             // Assert
-            Assert.That(ex, Has.Message.EqualTo("'my-job' is disposed."));
+            Assert.That(ex, Has.Message.StartWith("Cannot access a disposed object."));
+            Assert.That(ex.ObjectName, Is.EqualTo("my-job"));
         }
     }
 }

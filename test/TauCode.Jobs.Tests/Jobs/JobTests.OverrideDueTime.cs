@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using TauCode.Extensions;
 using TauCode.Infrastructure.Time;
-using TauCode.Jobs.Exceptions;
 using TauCode.Jobs.Schedules;
 
 namespace TauCode.Jobs.Tests.Jobs
@@ -32,7 +31,7 @@ namespace TauCode.Jobs.Tests.Jobs
             const double tB = 3.1;
             const double tC = 4.0;
 
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -140,7 +139,7 @@ namespace TauCode.Jobs.Tests.Jobs
             const double t3 = 2.5;
             const double tB = 3.3;
 
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -200,7 +199,7 @@ namespace TauCode.Jobs.Tests.Jobs
         {
             // Arrange
 
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -209,7 +208,7 @@ namespace TauCode.Jobs.Tests.Jobs
             var job = jobManager.Create("my-job");
 
             // Act
-            var ex = Assert.Throws<JobException>(() => job.OverrideDueTime(start.AddSeconds(-1)));
+            var ex = Assert.Throws<InvalidOperationException>(() => job.OverrideDueTime(start.AddSeconds(-1)));
 
             // Assert
             Assert.That(ex, Has.Message.EqualTo("Cannot override due time in the past."));
@@ -248,7 +247,7 @@ namespace TauCode.Jobs.Tests.Jobs
             const double tF = 4.3;
             const double tG = 5.3;
 
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -472,7 +471,7 @@ namespace TauCode.Jobs.Tests.Jobs
             const double tA = 1.9;
             const double tB = 4.5;
 
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -548,7 +547,7 @@ namespace TauCode.Jobs.Tests.Jobs
             const double tA = 1.9;
             const double tB = 4.5;
 
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -608,16 +607,16 @@ namespace TauCode.Jobs.Tests.Jobs
         public void OverrideDueTime_Disposed_ThrowsJobObjectDisposedException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var job = jobManager.Create("my-job");
             job.Dispose();
 
             // Act
-            var ex = Assert.Throws<JobObjectDisposedException>(() => job.OverrideDueTime(DateTimeOffset.UtcNow.AddHours(3)));
+            var ex = Assert.Throws<ObjectDisposedException>(() => job.OverrideDueTime(DateTimeOffset.UtcNow.AddHours(3)));
 
             // Assert
-            Assert.That(ex, Has.Message.EqualTo("'my-job' is disposed."));
+            Assert.That(ex, Has.Message.StartWith("Cannot access a disposed object."));
             Assert.That(ex.ObjectName, Is.EqualTo("my-job"));
         }
 
@@ -640,7 +639,7 @@ namespace TauCode.Jobs.Tests.Jobs
             const double tA = 1.9;
             const double tB = 4.5;
 
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);

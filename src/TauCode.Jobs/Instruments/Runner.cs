@@ -1,7 +1,6 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Threading;
-using TauCode.Jobs.Exceptions;
-using TauCode.Working;
 
 namespace TauCode.Jobs.Instruments
 {
@@ -15,24 +14,22 @@ namespace TauCode.Jobs.Instruments
         private RunContext _runContext;
 
         private readonly object _lock;
-
-        private readonly ObjectLogger _logger;
+        private readonly ILogger _logger;
 
         #endregion
 
         #region Constructor
 
-        internal Runner(string jobName)
+        internal Runner(string jobName, ILogger logger)
         {
             this.JobName = jobName;
+            _logger = logger;
 
-            this.JobPropertiesHolder = new JobPropertiesHolder(this.JobName);
-            this.DueTimeHolder = new DueTimeHolder(this.JobName);
+            this.JobPropertiesHolder = new JobPropertiesHolder(this.JobName, _logger);
+            this.DueTimeHolder = new DueTimeHolder(this.JobName, _logger);
             this.JobRunsHolder = new JobRunsHolder();
 
             _lock = new object();
-
-            _logger = new ObjectLogger(this, jobName);
         }
 
         #endregion
@@ -45,7 +42,7 @@ namespace TauCode.Jobs.Instruments
             {
                 if (_isDisposed)
                 {
-                    throw new JobObjectDisposedException(this.JobName);
+                    throw new ObjectDisposedException(this.JobName);
                 }
             }
         }
@@ -53,7 +50,7 @@ namespace TauCode.Jobs.Instruments
         private RunContext Run(JobStartReason startReason, CancellationToken? token)
         {
             // always guarded by '_lock'
-            var runContext = new RunContext(this, startReason, token);
+            var runContext = new RunContext(this, startReason, token, _logger);
             var startedRunContext = runContext.Start();
             return startedRunContext;
         }
@@ -155,12 +152,12 @@ namespace TauCode.Jobs.Instruments
 
                     if (this.IsRunning)
                     {
-                        throw new JobException($"Job '{this.JobName}' is already running.");
+                        throw new InvalidOperationException($"Job '{this.JobName}' is already running.");
                     }
 
                     if (!this.IsEnabled)
                     {
-                        throw new JobException($"Job '{this.JobName}' is disabled.");
+                        throw new InvalidOperationException($"Job '{this.JobName}' is disabled.");
                     }
 
                     _runContext = this.Run(startReason, token);
@@ -263,16 +260,6 @@ namespace TauCode.Jobs.Instruments
             {
                 _runContext = null;
             }
-        }
-
-        internal bool IsLoggingEnabled => _logger.IsEnabled;
-
-        internal void EnableLogging(bool enable)
-        {
-            _logger.IsEnabled = enable;
-
-            this.JobPropertiesHolder.EnableLogging(enable);
-            this.DueTimeHolder.EnableLogging(enable);
         }
 
         #endregion

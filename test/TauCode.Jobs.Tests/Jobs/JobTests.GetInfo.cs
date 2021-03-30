@@ -15,7 +15,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void GetInfo_JustCreated_ReturnsValidResult()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -38,7 +38,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task GetInfo_ArgumentIsNull_ReturnsAllRuns()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -93,7 +93,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void GetInfo_ArgumentIsNegative_ThrowsArgumentOutOfRangeException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -112,7 +112,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task GetInfo_ArgumentIsZero_ReturnsEmptyRuns()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -150,7 +150,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task GetInfo_ArgumentIsVeryLarge_ReturnsAllRuns()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -236,7 +236,7 @@ namespace TauCode.Jobs.Tests.Jobs
             const double tG = 5.3; // ^G - after schedule-due-time start
             const double tH = 6.6; // ^H - after schedule-due-time run completes
 
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -291,7 +291,7 @@ namespace TauCode.Jobs.Tests.Jobs
 
             // !3 - overridden due time
             await timeMachine.WaitUntilSecondsElapse(start, t3);
-            await _logWriter.WriteLineAsync($"=== t3 came! {t3} ===");
+            //await _logWriter.WriteLineAsync($"=== t3 came! {t3} ==="); // todo todo00000000
 
             // ^E - after overridden-due-time start
             await timeMachine.WaitUntilSecondsElapse(start, tE);
@@ -304,8 +304,8 @@ namespace TauCode.Jobs.Tests.Jobs
 
             // !4 - starts by schedule
             await timeMachine.WaitUntilSecondsElapse(start, t4);
-            await _logWriter.WriteLineAsync($"=== t4 came! {t4} ===");
-
+            //await _logWriter.WriteLineAsync($"=== t4 came! {t4} ==="); // todo dodo000000000000
+            
             // ^G - after schedule-due-time start
             await timeMachine.WaitUntilSecondsElapse(start, tG);
             var infoG = job.GetInfo(null);
@@ -498,7 +498,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task GetInfo_ArgumentIsGreaterThanRunCount_ReturnsRequestedNumberOfRuns()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -527,7 +527,7 @@ namespace TauCode.Jobs.Tests.Jobs
 
             // Assert
 
-            for (int i = 0; i < 5; i++)
+            for (var i = 0; i < 5; i++)
             {
                 var runInfo = info.Runs[i];
                 Assert.That(runInfo.RunIndex, Is.EqualTo(i));

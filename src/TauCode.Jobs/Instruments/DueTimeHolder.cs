@@ -1,8 +1,7 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using TauCode.Infrastructure.Time;
-using TauCode.Jobs.Exceptions;
 using TauCode.Jobs.Schedules;
-using TauCode.Working;
 
 namespace TauCode.Jobs.Instruments
 {
@@ -19,21 +18,19 @@ namespace TauCode.Jobs.Instruments
         private readonly string _jobName;
 
         private readonly object _lock;
-
-        private readonly ObjectLogger _logger;
+        private readonly ILogger _logger;
 
         #endregion
 
         #region Constructor
 
-        internal DueTimeHolder(string jobName)
+        internal DueTimeHolder(string jobName, ILogger logger)
         {
+            _logger = logger;
             _jobName = jobName;
             _schedule = NeverSchedule.Instance;
             _lock = new object();
             this.UpdateScheduleDueTime();
-
-            _logger = new ObjectLogger(this, _jobName);
         }
 
         #endregion
@@ -46,7 +43,7 @@ namespace TauCode.Jobs.Instruments
             {
                 if (_isDisposed)
                 {
-                    throw new JobObjectDisposedException(_jobName);
+                    throw new ObjectDisposedException(_jobName);
                 }
             }
         }
@@ -94,7 +91,7 @@ namespace TauCode.Jobs.Instruments
                     var now = TimeProvider.GetCurrentTime();
                     if (now > value)
                     {
-                        throw new JobException("Cannot override due time in the past."); // already came
+                        throw new  InvalidOperationException("Cannot override due time in the past."); // already came
                     }
 
                     _overriddenDueTime = value;
@@ -109,8 +106,10 @@ namespace TauCode.Jobs.Instruments
             {
                 if (_isDisposed)
                 {
-                    _logger.Warning(
+                    _logger.LogWarningEx(
+                        null,
                         $"Rejected attempt to update schedule due time of an exposed '{this.GetType().FullName}'.",
+                        this.GetType(),
                         nameof(UpdateScheduleDueTime));
                     return;
                 }
@@ -120,16 +119,21 @@ namespace TauCode.Jobs.Instruments
                     _scheduleDueTime = _schedule.GetDueTimeAfter(now.AddTicks(1));
                     if (_scheduleDueTime < now)
                     {
-                        _logger.Warning(
+                        _logger.LogWarningEx(
+                            null,
                             "Due time is earlier than current time. Due time is changed to 'never'.",
+                            this.GetType(),
                             nameof(UpdateScheduleDueTime));
                         _scheduleDueTime = JobExtensions.Never;
                     }
                     else if (_scheduleDueTime > JobExtensions.Never)
                     {
-                        _logger.Warning(
+                        _logger.LogWarningEx(
+                            null,
                             "Due time is later than 'never'. Due time is changed to 'never'.",
+                            this.GetType(),
                             nameof(UpdateScheduleDueTime));
+
                         _scheduleDueTime = JobExtensions.Never;
                     }
 
@@ -138,10 +142,11 @@ namespace TauCode.Jobs.Instruments
                 {
                     _scheduleDueTime = JobExtensions.Never;
 
-                    _logger.Warning(
+                    _logger.LogWarningEx(
+                        ex,
                         "An exception was thrown on attempt to calculate due time. Due time is changed to 'never'.",
-                        nameof(UpdateScheduleDueTime),
-                        ex);
+                        this.GetType(),
+                        nameof(UpdateScheduleDueTime));
                 }
             }
         }
@@ -152,11 +157,6 @@ namespace TauCode.Jobs.Instruments
             {
                 return new DueTimeInfo(_scheduleDueTime, _overriddenDueTime);
             }
-        }
-
-        internal void EnableLogging(bool enable)
-        {
-            _logger.IsEnabled = enable;
         }
 
         #endregion
