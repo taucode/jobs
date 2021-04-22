@@ -5,7 +5,7 @@ using Serilog;
 using Serilog.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
-using TauCode.Infrastructure.Lab;
+using TauCode.Infrastructure.Logging;
 using TauCode.Infrastructure.Time;
 
 namespace TauCode.Jobs.Tests.Jobs
@@ -13,7 +13,7 @@ namespace TauCode.Jobs.Tests.Jobs
     [TestFixture]
     public partial class JobTests
     {
-        private StringLoggerLab _logger;
+        private StringLogger _logger;
         private string CurrentLog => _logger.ToString();
 
         // todo: describe what's going on here - why 5000 and 0?
@@ -27,7 +27,7 @@ namespace TauCode.Jobs.Tests.Jobs
             GC.Collect();
             await Task.Delay(SetUpTimeout);
 
-            _logger = new StringLoggerLab();
+            _logger = new StringLogger();
 
             var collection = new LoggerProviderCollection();
 

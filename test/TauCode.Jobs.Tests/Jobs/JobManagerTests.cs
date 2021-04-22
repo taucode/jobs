@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TauCode.Extensions;
-using TauCode.Infrastructure.Lab;
+using TauCode.Infrastructure.Logging;
 using TauCode.Infrastructure.Time;
 using TauCode.Jobs.Schedules;
 
@@ -19,7 +19,7 @@ namespace TauCode.Jobs.Tests.Jobs
     [TestFixture]
     public class JobManagerTests
     {
-        private StringLoggerLab _logger;
+        private StringLogger _logger;
         private string CurrentLog => _logger.ToString();
 
         [SetUp]
@@ -27,7 +27,7 @@ namespace TauCode.Jobs.Tests.Jobs
         {
             TimeProvider.Reset();
 
-            _logger = new StringLoggerLab();
+            _logger = new StringLogger();
 
             var collection = new LoggerProviderCollection();
 
