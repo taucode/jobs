@@ -5,8 +5,8 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using TauCode.Extensions;
 using TauCode.Infrastructure.Time;
+using TauCode.IO;
 
 namespace TauCode.Jobs.Instruments
 {
@@ -89,7 +89,7 @@ namespace TauCode.Jobs.Instruments
 
                     _logger.LogWarningEx(
                         ex,
-                        "Routine has thrown an exception.", 
+                        "Routine has thrown an exception.",
                         this.GetType(),
                         "ctor");
 

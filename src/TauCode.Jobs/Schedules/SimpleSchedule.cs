@@ -93,7 +93,7 @@ namespace TauCode.Jobs.Schedules
             }
             else
             {
-                var spanCount = (int) ((after - this.BaseTime).TotalMilliseconds / this.TimeSpan.TotalMilliseconds);
+                var spanCount = (int)((after - this.BaseTime).TotalMilliseconds / this.TimeSpan.TotalMilliseconds);
                 var result = this.BaseTime.AddMilliseconds(spanCount * this.TimeSpan.TotalMilliseconds);
 
                 while (true)
@@ -102,7 +102,7 @@ namespace TauCode.Jobs.Schedules
                     {
                         // maybe there is concrete moment between 'after' and 'result'?
                         var resultCopy = result; // capture of variable!
-                        var idx = _concreteMoments.FindFirstIndexOf(x => x > after && x < resultCopy);
+                        var idx = _concreteMoments.FindFirstIndex(x => x > after && x < resultCopy);
 
                         if (idx >= 0)
                         {
