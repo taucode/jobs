@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using TauCode.Extensions;
 using TauCode.Infrastructure.Time;
-using TauCode.Working;
+using TauCode.IO;
 
 namespace TauCode.Jobs.Instruments
 {
@@ -22,7 +22,7 @@ namespace TauCode.Jobs.Instruments
 
         private readonly Task _task;
 
-        private readonly ObjectLogger _logger;
+        private readonly ILogger _logger;
 
         #endregion
 
@@ -31,7 +31,8 @@ namespace TauCode.Jobs.Instruments
         internal RunContext(
             Runner initiator,
             JobStartReason startReason,
-            CancellationToken? token)
+            CancellationToken? token,
+            ILogger logger)
         {
             _initiator = initiator;
             var jobProperties = _initiator.JobPropertiesHolder.ToJobProperties();
@@ -69,10 +70,7 @@ namespace TauCode.Jobs.Instruments
                 JobRunStatus.Running,
                 _systemWriter);
 
-            _logger = new ObjectLogger(this, _initiator.JobName)
-            {
-                IsEnabled = _initiator.IsLoggingEnabled,
-            };
+            _logger = logger;
 
             try
             {
@@ -89,7 +87,12 @@ namespace TauCode.Jobs.Instruments
                     var ex = ExtractTaskException(_task.Exception);
                     multiTextWriter.WriteLine(ex);
 
-                    _logger.Warning("Routine has thrown an exception.", "ctor", ex);
+                    _logger.LogWarningEx(
+                        ex,
+                        "Routine has thrown an exception.",
+                        this.GetType(),
+                        "ctor");
+
                     _task = Task.FromException(ex);
                 }
             }
@@ -98,7 +101,12 @@ namespace TauCode.Jobs.Instruments
                 // it is not an error if Routine throws, but let's log it as a warning.
                 multiTextWriter.WriteLine(ex);
 
-                _logger.Warning("Routine has thrown an exception.", "ctor", ex);
+                _logger.LogWarningEx(
+                    ex,
+                    "Routine has thrown an exception.",
+                    this.GetType(),
+                    "ctor");
+
                 _task = Task.FromException(ex);
             }
         }
@@ -109,7 +117,11 @@ namespace TauCode.Jobs.Instruments
 
         private void EndTask(Task task)
         {
-            _logger.Debug($"Task ended. Status: {task.Status}", nameof(EndTask), task.Exception?.InnerException);
+            _logger.LogDebugEx(
+                task.Exception?.InnerException,
+                $"Task ended. Status: {task.Status}",
+                this.GetType(),
+                nameof(EndTask));
 
             JobRunStatus status;
             Exception exception = null;

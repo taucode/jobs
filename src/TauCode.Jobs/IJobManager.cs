@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 
 namespace TauCode.Jobs
@@ -16,5 +17,7 @@ namespace TauCode.Jobs
         IReadOnlyList<string> GetNames();
 
         IJob Get(string jobName);
+
+        ILogger Logger { get; set; }
     }
 }

@@ -13,7 +13,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void IsDisposed_JobIsNotDisposed_ReturnsFalse()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -43,7 +43,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void IsDisposed_JobIsDisposed_ReturnsTrue()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);

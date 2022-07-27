@@ -1,9 +1,10 @@
 ﻿using NUnit.Framework;
+using System;
 using System.Text;
 using System.Threading.Tasks;
 using TauCode.Extensions;
 using TauCode.Infrastructure.Time;
-using TauCode.Jobs.Exceptions;
+using TauCode.IO;
 using TauCode.Jobs.Schedules;
 
 namespace TauCode.Jobs.Tests.Jobs
@@ -15,7 +16,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Parameter_JustCreated_EqualsToNull()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -34,7 +35,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Parameter_ValueIsSet_EqualsToThatValue()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -72,7 +73,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task Parameter_SetOnTheFly_RunsWithOldParameterAndNextTimeRunsWithNewParameter()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -137,7 +138,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task Parameter_SetAfterFirstRun_NextTimeRunsWithNewParameter()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -196,7 +197,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Parameter_JobIsDisposed_CanBeRead()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -217,7 +218,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Parameter_JobIsDisposedThenValueIsSet_ThrowsJobObjectDisposedException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -228,7 +229,7 @@ namespace TauCode.Jobs.Tests.Jobs
             // Act
             job.Parameter = 17;
             job.Dispose();
-            var ex = Assert.Throws<JobObjectDisposedException>(() => job.Parameter = 101);
+            var ex = Assert.Throws<ObjectDisposedException>(() => job.Parameter = 101);
 
             // Assert
             Assert.That(job.Parameter, Is.EqualTo(17));

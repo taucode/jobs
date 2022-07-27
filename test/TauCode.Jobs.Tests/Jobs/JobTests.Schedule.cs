@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TauCode.Extensions;
 using TauCode.Infrastructure.Time;
-using TauCode.Jobs.Exceptions;
+using TauCode.IO;
 using TauCode.Jobs.Schedules;
 
 namespace TauCode.Jobs.Tests.Jobs
@@ -21,7 +21,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Schedule_JustCreatedJob_ReturnsNeverSchedule()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
 
@@ -44,7 +44,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Schedule_SetNull_ThrowsArgumentNullException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var job = jobManager.Create("my-job");
 
@@ -59,7 +59,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task Schedule_SetValidValue_SetsSchedule()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -92,7 +92,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Schedule_SetValidValueForEnabledOrDisabledJob_SetsValue()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
             var job = jobManager.Create("my-job");
 
             var start = "2000-01-01Z".ToUtcDateOffset();
@@ -125,7 +125,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task Schedule_SetAndStarted_ReflectedInCurrentRunAndUpdatesToNextDueTime()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -145,7 +145,6 @@ namespace TauCode.Jobs.Tests.Jobs
             job.Schedule = schedule; // will fire at 00:01
 
             await timeMachine.WaitUntilSecondsElapse(start, 1.03);
-            //await Task.Delay(1030); // let job start
 
             // Assert
             try
@@ -171,7 +170,7 @@ namespace TauCode.Jobs.Tests.Jobs
                 sb.AppendLine(ex.ToString());
                 sb.AppendLine("*** Log: ***");
 
-                var log = _logWriter.ToString();
+                var log = this.CurrentLog;
 
                 sb.AppendLine(log);
 
@@ -185,7 +184,7 @@ namespace TauCode.Jobs.Tests.Jobs
             // Arrange
             var DEFECT = TimeSpan.FromMilliseconds(30);
 
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -232,15 +231,12 @@ namespace TauCode.Jobs.Tests.Jobs
             }
             catch (Exception ex)
             {
-                // todo: need this block, here & in other places?
-                // it is known now that the reason was slowpok TPL
-
                 var sb = new StringBuilder();
                 sb.AppendLine("*** Test Failed ***");
                 sb.AppendLine(ex.ToString());
                 sb.AppendLine("*** Log: ***");
 
-                var log = _logWriter.ToString();
+                var log = this.CurrentLog;
 
                 sb.AppendLine(log);
 
@@ -259,7 +255,7 @@ namespace TauCode.Jobs.Tests.Jobs
             // Arrange
             var DEFECT = TimeSpan.FromMilliseconds(30);
 
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -316,7 +312,7 @@ namespace TauCode.Jobs.Tests.Jobs
             // Arrange
             var DEFECT = TimeSpan.FromMilliseconds(30);
 
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -375,7 +371,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task Schedule_DueTimeWasOverriddenThenScheduleIsSet_OverriddenDueTimeIsDiscardedAndScheduleIsSet()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
             var job = jobManager.Create("my-job");
 
             var start = "2000-01-01Z".ToUtcDateOffset();
@@ -406,7 +402,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task Schedule_SetDuringRun_DoesNotAffectRunButAppliesToDueTime()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2000-01-01Z".ToUtcDateOffset();
             var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -467,7 +463,7 @@ namespace TauCode.Jobs.Tests.Jobs
                 sb.AppendLine(ex.ToString());
                 sb.AppendLine("*** Log: ***");
 
-                var log = _logWriter.ToString();
+                var log = this.CurrentLog;
 
                 sb.AppendLine(log);
 
@@ -479,7 +475,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Schedule_SetThenDisposed_EqualsToLastOne()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
             var job = jobManager.Create("my-job");
 
             var start = "2000-01-01Z".ToUtcDateOffset();
@@ -511,7 +507,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Schedule_DisposedThenSet_ThrowsJobObjectDisposedException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
             var job = jobManager.Create("my-job");
 
             var start = "2000-01-01Z".ToUtcDateOffset();
@@ -520,11 +516,11 @@ namespace TauCode.Jobs.Tests.Jobs
 
             // Act
             job.Dispose();
-            var ex = Assert.Throws<JobObjectDisposedException>(() =>
+            var ex = Assert.Throws<ObjectDisposedException>(() =>
                 job.Schedule = new SimpleSchedule(SimpleScheduleKind.Minute, 1, start.AddHours(1)));
 
             // Assert
-            Assert.That(ex, Has.Message.EqualTo("'my-job' is disposed."));
+            Assert.That(ex, Has.Message.StartWith("Cannot access a disposed object."));
             Assert.That(ex.ObjectName, Is.EqualTo("my-job"));
         }
 
@@ -532,7 +528,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task Schedule_ScheduleThrows_DueTimeSetToNever()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
             var job = jobManager.Create("my-job");
 
             var start = "2000-01-01Z".ToUtcDateOffset();
@@ -578,17 +574,18 @@ namespace TauCode.Jobs.Tests.Jobs
             Assert.That(info.RunCount, Is.Zero);
             Assert.That(n, Is.EqualTo(0));
 
-            var log = _logWriter.ToString();
+            var log = this.CurrentLog;
+
             Assert.That(log, Does.Contain($"{exception.GetType().FullName}: {exception.Message}"));
 
-            Assert.Pass(_logWriter.ToString());
+            Assert.Pass(log);
         }
 
         [Test]
         public async Task Schedule_ScheduleReturnsDueTimeBeforeNow_DueTimeSetToNever()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
             var job = jobManager.Create("my-job");
 
             var start = "2000-01-01Z".ToUtcDateOffset();
@@ -631,17 +628,17 @@ namespace TauCode.Jobs.Tests.Jobs
             Assert.That(info.RunCount, Is.Zero);
             Assert.That(n, Is.EqualTo(0));
 
-            var log = _logWriter.ToString();
+            var log = this.CurrentLog;
             Assert.That(log, Does.Contain($"Due time is earlier than current time. Due time is changed to 'never'."));
 
-            Assert.Pass(_logWriter.ToString());
+            Assert.Pass(log);
         }
 
         [Test]
         public async Task Schedule_ScheduleReturnsDueTimeAfterNever_DueTimeSetToNever()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
             var job = jobManager.Create("my-job");
 
             var start = "2000-01-01Z".ToUtcDateOffset();
@@ -685,10 +682,10 @@ namespace TauCode.Jobs.Tests.Jobs
             Assert.That(info.RunCount, Is.Zero);
             Assert.That(n, Is.EqualTo(0));
 
-            var log = _logWriter.ToString();
+            var log = this.CurrentLog;
             Assert.That(log, Does.Contain("Due time is later than 'never'. Due time is changed to 'never'."));
 
-            Assert.Pass(_logWriter.ToString());
+            Assert.Pass(log);
         }
     }
 }

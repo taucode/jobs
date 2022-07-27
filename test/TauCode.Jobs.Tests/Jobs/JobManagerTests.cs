@@ -1,4 +1,8 @@
-﻿using NUnit.Framework;
+﻿using Microsoft.Extensions.Logging;
+using Moq;
+using NUnit.Framework;
+using Serilog;
+using Serilog.Extensions.Logging;
 using System;
 using System.IO;
 using System.Linq;
@@ -6,20 +10,39 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TauCode.Extensions;
+using TauCode.Infrastructure.Logging;
 using TauCode.Infrastructure.Time;
-using TauCode.Jobs.Exceptions;
+using TauCode.IO;
 using TauCode.Jobs.Schedules;
 
-// todo clean up
 namespace TauCode.Jobs.Tests.Jobs
 {
     [TestFixture]
     public class JobManagerTests
     {
+        private StringLogger _logger;
+        private string CurrentLog => _logger.ToString();
+
         [SetUp]
         public void SetUp()
         {
             TimeProvider.Reset();
+
+            _logger = new StringLogger();
+
+            var collection = new LoggerProviderCollection();
+
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Providers(collection)
+                .MinimumLevel
+                .Debug()
+                .CreateLogger();
+
+            var providerMock = new Mock<ILoggerProvider>();
+            providerMock.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(_logger);
+
+            collection.AddProvider(providerMock.Object);
+
         }
 
         #region JobManager.ctor
@@ -47,7 +70,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Start_NotStarted_Starts()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
 
             // Act
             jobManager.Start();
@@ -64,14 +87,14 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Start_AlreadyStarted_ThrowsInvalidJobOperationException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
             jobManager.Start();
 
             // Act
-            var ex = Assert.Throws<InvalidJobOperationException>(() => jobManager.Start());
+            var ex = Assert.Throws<InvalidOperationException>(() => jobManager.Start());
 
             // Assert
-            Assert.That(ex.Message, Is.EqualTo($"'{typeof(IJobManager).FullName}' is already running."));
+            Assert.That(ex.Message, Is.EqualTo("Cannot start Job Manager."));
             jobManager.Dispose();
         }
 
@@ -79,15 +102,15 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Start_AlreadyDisposed_ThrowsException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using var jobManager = TestHelper.CreateJobManager(false, _logger);
             jobManager.Dispose();
 
             // Act
-            var ex = Assert.Throws<JobObjectDisposedException>(() => jobManager.Start());
+            var ex = Assert.Throws<ObjectDisposedException>(() => jobManager.Start());
 
             // Assert
-            Assert.That(ex.Message, Is.EqualTo($"'{typeof(IJobManager).FullName}' is disposed."));
-            Assert.That(ex.ObjectName, Is.EqualTo(typeof(IJobManager).FullName));
+            Assert.That(ex, Has.Message.StartWith("Cannot access a disposed object.")); // todo: uncomment when fix this exception's message in taucode.working
+            Assert.That(ex.ObjectName, Is.EqualTo(typeof(JobManager).FullName));
 
             jobManager.Dispose();
         }
@@ -100,7 +123,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void IsRunning_NotStarted_ReturnsFalse()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
 
             // Act
             var isRunning = jobManager.IsRunning;
@@ -113,7 +136,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void IsRunning_Started_ReturnsTrue()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
             jobManager.Start();
 
             // Act
@@ -129,7 +152,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void IsRunning_NotStartedThenDisposed_ReturnsFalse()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
             jobManager.Dispose();
 
             // Act
@@ -143,7 +166,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void IsRunning_StartedThenDisposed_ReturnsFalse()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
             jobManager.Start();
             jobManager.Dispose();
 
@@ -162,7 +185,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void IsDisposed_NotStarted_ReturnsFalse()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
 
             // Act
             var isDisposed = jobManager.IsDisposed;
@@ -171,12 +194,11 @@ namespace TauCode.Jobs.Tests.Jobs
             Assert.That(isDisposed, Is.False);
         }
 
-        // todo0 this deadlocks!
         [Test]
         public void IsDisposed_Started_ReturnsFalse()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
             jobManager.Start();
 
             // Act
@@ -191,7 +213,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void IsDisposed_NotStartedThenDisposed_ReturnsTrue()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
             jobManager.Dispose();
 
             // Act
@@ -201,12 +223,11 @@ namespace TauCode.Jobs.Tests.Jobs
             Assert.That(isDisposed, Is.True);
         }
 
-        // todo0 this deadlocks!
         [Test]
         public void IsDisposed_StartedThenDisposed_ReturnsTrue()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
             jobManager.Start();
             jobManager.Dispose();
 
@@ -225,20 +246,20 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Create_NotStarted_ThrowsInvalidJobOperationException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using var jobManager = TestHelper.CreateJobManager(false, _logger);
 
             // Act
-            var ex = Assert.Throws<InvalidJobOperationException>(() => jobManager.Create("job1"));
+            var ex = Assert.Throws<InvalidOperationException>(() => jobManager.Create("job1"));
 
             // Assert
-            Assert.That(ex.Message, Is.EqualTo($"'{typeof(IJobManager).FullName}' not started."));
+            Assert.That(ex.Message, Is.EqualTo("Cannot perform operation 'Create'. Job Manager is not running."));
         }
 
         [Test]
         public void Create_Started_ReturnsJob()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
             jobManager.Start();
 
             // Act
@@ -263,7 +284,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Create_BadJobName_ThrowsArgumentException(string badJobName)
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             // Act
             var ex = Assert.Throws<ArgumentException>(() => jobManager.Create(badJobName));
@@ -277,12 +298,12 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Create_NameAlreadyExists_ThrowsInvalidJobOperationException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
             var name = "job1";
             jobManager.Create(name);
 
             // Act
-            var ex = Assert.Throws<InvalidJobOperationException>(() => jobManager.Create(name));
+            var ex = Assert.Throws<InvalidOperationException>(() => jobManager.Create(name));
 
             // Assert
             Assert.That(ex.Message, Is.EqualTo($"Job '{name}' already exists."));
@@ -292,16 +313,15 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Create_Disposed_ThrowsJobObjectIsDisposedException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
             jobManager.Dispose();
 
             // Act
-            var ex = Assert.Throws<JobObjectDisposedException>(() => jobManager.Create("job1"));
+            var ex = Assert.Throws<ObjectDisposedException>(() => jobManager.Create("job1"));
 
             // Assert
-            Assert.That(ex.Message, Is.EqualTo($"'{typeof(IJobManager).FullName}' is disposed."));
-            Assert.That(ex.ObjectName, Is.EqualTo(typeof(IJobManager).FullName));
-
+            Assert.That(ex, Has.Message.StartWith("Cannot access a disposed object."));
+            Assert.That(ex.ObjectName, Is.EqualTo(typeof(JobManager).FullName));
         }
 
         #endregion
@@ -312,20 +332,20 @@ namespace TauCode.Jobs.Tests.Jobs
         public void GetNames_NotStarted_ThrowsInvalidJobOperationException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
 
             // Act
-            var ex = Assert.Throws<InvalidJobOperationException>(() => jobManager.GetNames());
+            var ex = Assert.Throws<InvalidOperationException>(() => jobManager.GetNames());
 
             // Assert
-            Assert.That(ex.Message, Is.EqualTo($"'{typeof(IJobManager).FullName}' not started."));
+            Assert.That(ex.Message, Is.EqualTo("Cannot perform operation 'GetNames'. Job Manager is not running."));
         }
 
         [Test]
         public void GetNames_Started_ReturnsJobNames()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
             jobManager.Start();
 
             jobManager.Create("job1");
@@ -342,17 +362,17 @@ namespace TauCode.Jobs.Tests.Jobs
         public void GetNames_Disposed_ThrowsJobObjectIsDisposedException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
             jobManager.Create("job1");
             jobManager.Create("job2");
             jobManager.Dispose();
 
             // Act
-            var ex = Assert.Throws<JobObjectDisposedException>(() => jobManager.GetNames());
+            var ex = Assert.Throws<ObjectDisposedException>(() => jobManager.GetNames());
 
             // Assert
-            Assert.That(ex.Message, Is.EqualTo($"'{typeof(IJobManager).FullName}' is disposed."));
-            Assert.That(ex.ObjectName, Is.EqualTo(typeof(IJobManager).FullName));
+            Assert.That(ex, Has.Message.StartWith("Cannot access a disposed object."));
+            Assert.That(ex.ObjectName, Is.EqualTo(typeof(JobManager).FullName));
         }
 
         #endregion
@@ -363,20 +383,20 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Get_NotStarted_ThrowsInvalidJobOperationException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
 
             // Act
-            var ex = Assert.Throws<InvalidJobOperationException>(() => jobManager.Get("my-job"));
+            var ex = Assert.Throws<InvalidOperationException>(() => jobManager.Get("my-job"));
 
             // Assert
-            Assert.That(ex.Message, Is.EqualTo($"'{typeof(IJobManager).FullName}' not started."));
+            Assert.That(ex.Message, Is.EqualTo("Cannot perform operation 'Get'. Job Manager is not running."));
         }
 
         [Test]
         public void Get_Started_ReturnsJob()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
             jobManager.Start();
             var job1 = jobManager.Create("job1");
             var job2 = jobManager.Create("job2");
@@ -395,7 +415,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Get_BadJobName_ThrowsArgumentException(string badJobName)
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             // Act
             var ex = Assert.Throws<ArgumentException>(() => jobManager.Get(badJobName));
@@ -409,13 +429,13 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Get_NonExistingJobName_ThrowsInvalidJobOperationException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             jobManager.Create("job1");
             jobManager.Create("job2");
 
             // Act
-            var ex = Assert.Throws<InvalidJobOperationException>(() => jobManager.Get("non-existing"));
+            var ex = Assert.Throws<InvalidOperationException>(() => jobManager.Get("non-existing"));
 
             // Assert
             Assert.That(ex.Message, Is.EqualTo("Job not found: 'non-existing'."));
@@ -425,18 +445,18 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Get_Disposed_ThrowsJobObjectDisposedException()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             jobManager.Create("job1");
             jobManager.Create("job2");
             jobManager.Dispose();
 
             // Act
-            var ex = Assert.Throws<JobObjectDisposedException>(() => jobManager.Get("job1"));
+            var ex = Assert.Throws<ObjectDisposedException>(() => jobManager.Get("job1"));
 
             // Assert
-            Assert.That(ex.Message, Is.EqualTo($"'{typeof(IJobManager).FullName}' is disposed."));
-            Assert.That(ex.ObjectName, Is.EqualTo(typeof(IJobManager).FullName));
+            Assert.That(ex, Has.Message.StartWith("Cannot access a disposed object."));
+            Assert.That(ex.ObjectName, Is.EqualTo(typeof(JobManager).FullName));
         }
 
         #endregion
@@ -447,7 +467,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Dispose_NotStarted_Disposes()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
 
             // Act
             jobManager.Dispose();
@@ -460,7 +480,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Dispose_Started_Disposes()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
             jobManager.Start();
 
             // Act
@@ -474,7 +494,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public void Dispose_AlreadyDisposed_RunsOk()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(false);
+            using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
             jobManager.Dispose();
 
             // Act
@@ -488,7 +508,7 @@ namespace TauCode.Jobs.Tests.Jobs
         public async Task Dispose_JobsCreated_DisposesAndJobsAreCanceledAndDisposed()
         {
             // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true);
+            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
             var start = "2020-01-01Z".ToUtcDateOffset();
             TimeProvider.Override(ShiftedTimeProvider.CreateTimeMachine(start));
@@ -540,6 +560,7 @@ namespace TauCode.Jobs.Tests.Jobs
             await Task.Delay(2500); // 3 iterations should be completed: ~400, ~1400, ~2400 todo: ut this
 
             // Act
+            // todo: these two wars are not used.
             var jobInfoBeforeDispose1 = job1.GetInfo(null);
             var jobInfoBeforeDispose2 = job2.GetInfo(null);
 

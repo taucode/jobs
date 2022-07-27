@@ -3,7 +3,6 @@ using System.IO;
 using System.Threading;
 using TauCode.Jobs.Instruments;
 using TauCode.Jobs.Schedules;
-using TauCode.Working;
 
 namespace TauCode.Jobs
 {
@@ -14,7 +13,6 @@ namespace TauCode.Jobs
         private readonly Vice _vice;
         private readonly Job _job;
         private readonly Runner _runner;
-        private readonly ObjectLogger _logger;
 
         #endregion
 
@@ -26,9 +24,7 @@ namespace TauCode.Jobs
 
             _vice = vice;
             _job = new Job(this);
-            _runner = new Runner(this.Name);
-
-            _logger = new ObjectLogger(this, this.Name);
+            _runner = new Runner(this.Name, _vice.Logger);
         }
 
         #endregion
@@ -109,16 +105,6 @@ namespace TauCode.Jobs
 
         internal JobStartResult Start(JobStartReason startReason, CancellationToken? token) =>
             _runner.Start(startReason, token);
-
-        #endregion
-
-        #region Internal - Logging
-
-        internal void EnableLogging(bool enable)
-        {
-            _logger.IsEnabled = enable;
-            _runner.EnableLogging(enable);
-        }
 
         #endregion
 

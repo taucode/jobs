@@ -1,7 +1,6 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.IO;
-using TauCode.Jobs.Exceptions;
-using TauCode.Working;
 
 namespace TauCode.Jobs.Instruments
 {
@@ -20,19 +19,19 @@ namespace TauCode.Jobs.Instruments
 
         private readonly object _lock;
 
-        private readonly ObjectLogger _logger;
+        private readonly ILogger _logger;
 
         #endregion
 
         #region Constructor
 
-        internal JobPropertiesHolder(string jobName)
+        internal JobPropertiesHolder(string jobName, ILogger logger)
         {
             _jobName = jobName;
             _routine = JobExtensions.IdleJobRoutine;
             _lock = new object();
 
-            _logger = new ObjectLogger(this, jobName);
+            _logger = logger;
         }
 
         #endregion
@@ -45,7 +44,7 @@ namespace TauCode.Jobs.Instruments
             {
                 if (_isDisposed)
                 {
-                    throw new JobObjectDisposedException(_jobName);
+                    throw new ObjectDisposedException(_jobName);
                 }
             }
         }
@@ -141,12 +140,7 @@ namespace TauCode.Jobs.Instruments
                     _output);
             }
         }
-
-        internal void EnableLogging(bool enable)
-        {
-            _logger.IsEnabled = enable;
-        }
-
+        
         #endregion
 
         #region IDisposable
