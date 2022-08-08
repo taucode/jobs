@@ -1,16 +1,13 @@
-﻿using System;
+﻿namespace TauCode.Jobs;
 
-namespace TauCode.Jobs
+internal readonly struct DueTimeInfo
 {
-    internal readonly struct DueTimeInfo
+    internal DueTimeInfo(DateTimeOffset scheduleDue, DateTimeOffset? overriddenDueTime)
     {
-        internal DueTimeInfo(DateTimeOffset scheduleDue, DateTimeOffset? overriddenDueTime)
-        {
-            this.ScheduleDueTime = scheduleDue;
-            this.OverriddenDueTime = overriddenDueTime;
-        }
-
-        internal DateTimeOffset ScheduleDueTime { get; }
-        internal DateTimeOffset? OverriddenDueTime { get; }
+        this.ScheduleDueTime = scheduleDue;
+        this.OverriddenDueTime = overriddenDueTime;
     }
+
+    internal DateTimeOffset ScheduleDueTime { get; }
+    internal DateTimeOffset? OverriddenDueTime { get; }
 }

@@ -1,23 +1,20 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
 
-namespace TauCode.Jobs
+namespace TauCode.Jobs;
+
+public interface IJobManager : IDisposable
 {
-    public interface IJobManager : IDisposable
-    {
-        void Start();
+    void Start();
 
-        bool IsRunning { get; }
+    bool IsRunning { get; }
 
-        bool IsDisposed { get; }
+    bool IsDisposed { get; }
 
-        IJob Create(string jobName);
+    IJob Create(string jobName);
 
-        IReadOnlyList<string> GetNames();
+    IReadOnlyList<string> GetNames();
 
-        IJob Get(string jobName);
+    IJob Get(string jobName);
 
-        ILogger Logger { get; set; }
-    }
+    ILogger Logger { get; set; }
 }

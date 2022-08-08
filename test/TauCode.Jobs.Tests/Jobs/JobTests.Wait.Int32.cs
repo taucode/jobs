@@ -1,295 +1,290 @@
 ﻿using NUnit.Framework;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using TauCode.Extensions;
 using TauCode.Infrastructure.Time;
 using TauCode.Jobs.Schedules;
 
-namespace TauCode.Jobs.Tests.Jobs
+namespace TauCode.Jobs.Tests.Jobs;
+
+[TestFixture]
+public partial class JobTests
 {
-    [TestFixture]
-    public partial class JobTests
+    [Test]
+    public void WaitInt_WasRunningThenEnds_WaitsAndReturnsCompleted()
     {
-        [Test]
-        public void WaitInt_WasRunningThenEnds_WaitsAndReturnsCompleted()
+        // Arrange
+        using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
+
+        var start = "2000-01-01Z".ToUtcDateOffset();
+        var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
+        TimeProvider.Override(timeMachine);
+
+        var job = jobManager.Create("my-job");
+
+        job.IsEnabled = true;
+
+        job.Routine = async (parameter, tracker, output, token) =>
         {
-            // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
+            await Task.Delay(500, token);
+        };
 
-            var start = "2000-01-01Z".ToUtcDateOffset();
-            var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
-            TimeProvider.Override(timeMachine);
+        // Act
+        job.ForceStart();
 
-            var job = jobManager.Create("my-job");
+        var waitResult = job.Wait(1000);
 
-            job.IsEnabled = true;
-            
-            job.Routine = async (parameter, tracker, output, token) =>
-            {
-                await Task.Delay(500, token);
-            };
+        // Assert
+        Assert.That(waitResult, Is.EqualTo(JobRunStatus.Completed));
+    }
 
-            // Act
-            job.ForceStart();
+    [Test]
+    public void WaitInt_NegativeArgument_ThrowsArgumentOutOfRangeException()
+    {
+        // Arrange
+        using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
-            var waitResult = job.Wait(1000);
+        var start = "2000-01-01Z".ToUtcDateOffset();
+        var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
+        TimeProvider.Override(timeMachine);
 
-            // Assert
-            Assert.That(waitResult, Is.EqualTo(JobRunStatus.Completed));
-        }
+        var job = jobManager.Create("my-job");
 
-        [Test]
-        public void WaitInt_NegativeArgument_ThrowsArgumentOutOfRangeException()
+        job.Routine = async (parameter, tracker, output, token) =>
         {
-            // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
+            await output.WriteAsync("Hello!");
+            await Task.Delay(TimeSpan.FromSeconds(0.5), token);
+        };
 
-            var start = "2000-01-01Z".ToUtcDateOffset();
-            var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
-            TimeProvider.Override(timeMachine);
+        job.IsEnabled = true;
 
-            var job = jobManager.Create("my-job");
+        job.Schedule = new SimpleSchedule(SimpleScheduleKind.Second, 1, start);
 
-            job.Routine = async (parameter, tracker, output, token) =>
-            {
-                await output.WriteAsync("Hello!");
-                await Task.Delay(TimeSpan.FromSeconds(0.5), token);
-            };
+        // Act
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => job.Wait(-1));
 
-            job.IsEnabled = true;
+        // Assert
+        Assert.That(ex.ParamName, Is.EqualTo("millisecondsTimeout"));
+    }
 
-            job.Schedule = new SimpleSchedule(SimpleScheduleKind.Second, 1, start);
+    [Test]
+    public void WaitInt_WasRunningThenCanceled_WaitsAndReturnsCanceled()
+    {
+        // Arrange
+        using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
-            // Act
-            var ex = Assert.Throws<ArgumentOutOfRangeException>(() => job.Wait(-1));
+        var start = "2000-01-01Z".ToUtcDateOffset();
+        var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
+        TimeProvider.Override(timeMachine);
 
-            // Assert
-            Assert.That(ex.ParamName, Is.EqualTo("millisecondsTimeout"));
-        }
+        var job = jobManager.Create("my-job");
 
-        [Test]
-        public void WaitInt_WasRunningThenCanceled_WaitsAndReturnsCanceled()
+        job.IsEnabled = true;
+
+        job.Routine = async (parameter, tracker, output, token) =>
         {
-            // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
+            await Task.Delay(500, token);
+        };
 
-            var start = "2000-01-01Z".ToUtcDateOffset();
-            var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
-            TimeProvider.Override(timeMachine);
+        // Act
+        job.ForceStart();
 
-            var job = jobManager.Create("my-job");
-
-            job.IsEnabled = true;
-
-            job.Routine = async (parameter, tracker, output, token) =>
-            {
-                await Task.Delay(500, token);
-            };
-
-            // Act
-            job.ForceStart();
-
-            ThreadPool.QueueUserWorkItem(state =>
-            {
-                Thread.Sleep(200);
-                job.Cancel();
-            });
-
-            var waitResult = job.Wait(1000);
-
-            // Assert
-            Assert.That(waitResult, Is.EqualTo(JobRunStatus.Canceled));
-        }
-
-        [Test]
-        public async Task WaitInt_WasRunningThenFaulted_WaitsAndReturnsFaulted()
+        ThreadPool.QueueUserWorkItem(state =>
         {
-            // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
+            Thread.Sleep(200);
+            job.Cancel();
+        });
 
-            var start = "2000-01-01Z".ToUtcDateOffset();
-            var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
-            TimeProvider.Override(timeMachine);
+        var waitResult = job.Wait(1000);
 
-            var job = jobManager.Create("my-job");
+        // Assert
+        Assert.That(waitResult, Is.EqualTo(JobRunStatus.Canceled));
+    }
 
-            job.IsEnabled = true;
+    [Test]
+    public async Task WaitInt_WasRunningThenFaulted_WaitsAndReturnsFaulted()
+    {
+        // Arrange
+        using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
-            job.Routine = async (parameter, tracker, output, token) =>
-            {
-                await Task.Delay(500, token);
-                throw new AbandonedMutexException("Hello there!");
-            };
+        var start = "2000-01-01Z".ToUtcDateOffset();
+        var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
+        TimeProvider.Override(timeMachine);
 
-            // Act
-            job.ForceStart();
+        var job = jobManager.Create("my-job");
 
-            var waitResult = job.Wait(1000);
+        job.IsEnabled = true;
 
-            await Task.Delay(50); // let job run get written.
-
-            // Assert
-            Assert.That(waitResult, Is.EqualTo(JobRunStatus.Faulted));
-            Assert.That(job.GetInfo(null).Runs.Single().Exception, Is.TypeOf<AbandonedMutexException>());
-        }
-
-        [Test]
-        public void WaitInt_WasRunningThenJobIsDisposed_WaitsAndReturnsCanceled()
+        job.Routine = async (parameter, tracker, output, token) =>
         {
-            // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
+            await Task.Delay(500, token);
+            throw new AbandonedMutexException("Hello there!");
+        };
 
-            var start = "2000-01-01Z".ToUtcDateOffset();
-            var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
-            TimeProvider.Override(timeMachine);
+        // Act
+        job.ForceStart();
 
-            var job = jobManager.Create("my-job");
+        var waitResult = job.Wait(1000);
 
-            job.IsEnabled = true;
+        await Task.Delay(50); // let job run get written.
 
-            job.Routine = async (parameter, tracker, output, token) =>
-            {
-                await Task.Delay(500, token);
-            };
+        // Assert
+        Assert.That(waitResult, Is.EqualTo(JobRunStatus.Faulted));
+        Assert.That(job.GetInfo(null).Runs.Single().Exception, Is.TypeOf<AbandonedMutexException>());
+    }
 
-            // Act
-            job.ForceStart();
+    [Test]
+    public void WaitInt_WasRunningThenJobIsDisposed_WaitsAndReturnsCanceled()
+    {
+        // Arrange
+        using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
-            ThreadPool.QueueUserWorkItem(state =>
-            {
-                Thread.Sleep(200);
-                job.Dispose();
-            });
+        var start = "2000-01-01Z".ToUtcDateOffset();
+        var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
+        TimeProvider.Override(timeMachine);
 
-            var waitResult = job.Wait(1000);
+        var job = jobManager.Create("my-job");
 
-            // Assert
-            Assert.That(waitResult, Is.EqualTo(JobRunStatus.Canceled));
-        }
+        job.IsEnabled = true;
 
-        [Test]
-        public void WaitInt_WasRunningThenJobManagerIsDisposed_WaitsAndReturnsCanceled()
+        job.Routine = async (parameter, tracker, output, token) =>
         {
-            // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
+            await Task.Delay(500, token);
+        };
 
-            var start = "2000-01-01Z".ToUtcDateOffset();
-            var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
-            TimeProvider.Override(timeMachine);
+        // Act
+        job.ForceStart();
 
-            var job = jobManager.Create("my-job");
-
-            job.IsEnabled = true;
-
-            job.Routine = async (parameter, tracker, output, token) =>
-            {
-                await Task.Delay(500, token);
-            };
-
-            // Act
-            job.ForceStart();
-
-            ThreadPool.QueueUserWorkItem(state =>
-            {
-                Thread.Sleep(200);
-                jobManager.Dispose();
-            });
-
-            var waitResult = job.Wait(1000);
-
-            // Assert
-            Assert.That(waitResult, Is.EqualTo(JobRunStatus.Canceled));
-        }
-
-        [Test]
-        public async Task WaitInt_WasRunningTooLong_WaitsAndReturnsNull()
+        ThreadPool.QueueUserWorkItem(state =>
         {
-            // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
-
-            var start = "2000-01-01Z".ToUtcDateOffset();
-            var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
-            TimeProvider.Override(timeMachine);
-
-            var job = jobManager.Create("my-job");
-
-            job.IsEnabled = true;
-
-            job.Routine = async (parameter, tracker, output, token) =>
-            {
-                await output.WriteAsync("Hello!");
-                await Task.Delay(TimeSpan.FromHours(1), token);
-            };
-
-            job.ForceStart();
-
-            // Act
-
-            await timeMachine.WaitUntilSecondsElapse(start, 1.0);
-
-            var gotSignal = job.Wait(1000);
-
-            // Assert
-            Assert.That(gotSignal, Is.Null);
-        }
-
-        [Test]
-        public void WaitInt_NotRunning_ReturnsCompletedImmediately()
-        {
-            // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
-
-            var start = "2000-01-01Z".ToUtcDateOffset();
-            var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
-            TimeProvider.Override(timeMachine);
-
-            var job = jobManager.Create("my-job");
-
-            job.Routine = async (parameter, tracker, output, token) =>
-            {
-                await output.WriteAsync("Hello!");
-                await Task.Delay(TimeSpan.FromSeconds(0.5), token);
-            };
-
-            // Act
-            var waitResult = job.Wait(10);
-
-            // Assert
-            Assert.That(waitResult, Is.EqualTo(JobRunStatus.Completed));
-        }
-
-        [Test]
-        public void WaitInt_JobIsDisposed_ThrowsJobObjectDisposedException()
-        {
-            // Arrange
-            using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
-
-            var start = "2000-01-01Z".ToUtcDateOffset();
-            var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
-            TimeProvider.Override(timeMachine);
-
-            var job = jobManager.Create("my-job");
-
-            job.Routine = async (parameter, tracker, output, token) =>
-            {
-                await output.WriteAsync("Hello!");
-                await Task.Delay(TimeSpan.FromSeconds(0.5), token);
-            };
-
-            job.IsEnabled = true;
-
-            job.Schedule = new SimpleSchedule(SimpleScheduleKind.Second, 1, start);
-
+            Thread.Sleep(200);
             job.Dispose();
+        });
 
-            // Act
-            var ex = Assert.Throws<ObjectDisposedException>(() => job.Wait(10));
+        var waitResult = job.Wait(1000);
 
-            // Assert
-            Assert.That(ex, Has.Message.StartWith("Cannot access a disposed object."));
-            Assert.That(ex.ObjectName, Is.EqualTo("my-job"));
-        }
+        // Assert
+        Assert.That(waitResult, Is.EqualTo(JobRunStatus.Canceled));
+    }
+
+    [Test]
+    public void WaitInt_WasRunningThenJobManagerIsDisposed_WaitsAndReturnsCanceled()
+    {
+        // Arrange
+        using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
+
+        var start = "2000-01-01Z".ToUtcDateOffset();
+        var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
+        TimeProvider.Override(timeMachine);
+
+        var job = jobManager.Create("my-job");
+
+        job.IsEnabled = true;
+
+        job.Routine = async (parameter, tracker, output, token) =>
+        {
+            await Task.Delay(500, token);
+        };
+
+        // Act
+        job.ForceStart();
+
+        ThreadPool.QueueUserWorkItem(state =>
+        {
+            Thread.Sleep(200);
+            jobManager.Dispose();
+        });
+
+        var waitResult = job.Wait(1000);
+
+        // Assert
+        Assert.That(waitResult, Is.EqualTo(JobRunStatus.Canceled));
+    }
+
+    [Test]
+    public async Task WaitInt_WasRunningTooLong_WaitsAndReturnsNull()
+    {
+        // Arrange
+        using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
+
+        var start = "2000-01-01Z".ToUtcDateOffset();
+        var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
+        TimeProvider.Override(timeMachine);
+
+        var job = jobManager.Create("my-job");
+
+        job.IsEnabled = true;
+
+        job.Routine = async (parameter, tracker, output, token) =>
+        {
+            await output.WriteAsync("Hello!");
+            await Task.Delay(TimeSpan.FromHours(1), token);
+        };
+
+        job.ForceStart();
+
+        // Act
+
+        await timeMachine.WaitUntilSecondsElapse(start, 1.0);
+
+        var gotSignal = job.Wait(1000);
+
+        // Assert
+        Assert.That(gotSignal, Is.Null);
+    }
+
+    [Test]
+    public void WaitInt_NotRunning_ReturnsCompletedImmediately()
+    {
+        // Arrange
+        using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
+
+        var start = "2000-01-01Z".ToUtcDateOffset();
+        var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
+        TimeProvider.Override(timeMachine);
+
+        var job = jobManager.Create("my-job");
+
+        job.Routine = async (parameter, tracker, output, token) =>
+        {
+            await output.WriteAsync("Hello!");
+            await Task.Delay(TimeSpan.FromSeconds(0.5), token);
+        };
+
+        // Act
+        var waitResult = job.Wait(10);
+
+        // Assert
+        Assert.That(waitResult, Is.EqualTo(JobRunStatus.Completed));
+    }
+
+    [Test]
+    public void WaitInt_JobIsDisposed_ThrowsJobObjectDisposedException()
+    {
+        // Arrange
+        using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
+
+        var start = "2000-01-01Z".ToUtcDateOffset();
+        var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
+        TimeProvider.Override(timeMachine);
+
+        var job = jobManager.Create("my-job");
+
+        job.Routine = async (parameter, tracker, output, token) =>
+        {
+            await output.WriteAsync("Hello!");
+            await Task.Delay(TimeSpan.FromSeconds(0.5), token);
+        };
+
+        job.IsEnabled = true;
+
+        job.Schedule = new SimpleSchedule(SimpleScheduleKind.Second, 1, start);
+
+        job.Dispose();
+
+        // Act
+        var ex = Assert.Throws<ObjectDisposedException>(() => job.Wait(10));
+
+        // Assert
+        Assert.That(ex, Has.Message.StartWith("Cannot access a disposed object."));
+        Assert.That(ex.ObjectName, Is.EqualTo("my-job"));
     }
 }

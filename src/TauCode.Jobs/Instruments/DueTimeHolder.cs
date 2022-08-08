@@ -1,181 +1,179 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
 using TauCode.Infrastructure.Time;
 using TauCode.Jobs.Schedules;
 
-namespace TauCode.Jobs.Instruments
+namespace TauCode.Jobs.Instruments;
+
+internal class DueTimeHolder : IDisposable
 {
-    internal class DueTimeHolder : IDisposable
+    #region Fields
+
+    private ISchedule _schedule;
+    private DateTimeOffset? _overriddenDueTime;
+
+    private DateTimeOffset _scheduleDueTime; // calculated
+
+    private bool _isDisposed;
+    private readonly string _jobName;
+
+    private readonly object _lock;
+    private readonly ILogger _logger;
+
+    #endregion
+
+    #region Constructor
+
+    internal DueTimeHolder(string jobName, ILogger logger)
     {
-        #region Fields
+        _logger = logger;
+        _jobName = jobName;
+        _schedule = NeverSchedule.Instance;
+        _lock = new object();
+        this.UpdateScheduleDueTime();
+    }
 
-        private ISchedule _schedule;
-        private DateTimeOffset? _overriddenDueTime;
+    #endregion
 
-        private DateTimeOffset _scheduleDueTime; // calculated
+    #region Private
 
-        private bool _isDisposed;
-        private readonly string _jobName;
-
-        private readonly object _lock;
-        private readonly ILogger _logger;
-
-        #endregion
-
-        #region Constructor
-
-        internal DueTimeHolder(string jobName, ILogger logger)
+    private void CheckNotDisposed()
+    {
+        lock (_lock)
         {
-            _logger = logger;
-            _jobName = jobName;
-            _schedule = NeverSchedule.Instance;
-            _lock = new object();
-            this.UpdateScheduleDueTime();
+            if (_isDisposed)
+            {
+                throw new ObjectDisposedException(_jobName);
+            }
         }
+    }
 
-        #endregion
+    #endregion
 
-        #region Private
+    #region Internal
 
-        private void CheckNotDisposed()
+    internal ISchedule Schedule
+    {
+        get
         {
             lock (_lock)
             {
-                if (_isDisposed)
-                {
-                    throw new ObjectDisposedException(_jobName);
-                }
+                return _schedule;
             }
         }
-
-        #endregion
-
-        #region Internal
-
-        internal ISchedule Schedule
+        set
         {
-            get
-            {
-                lock (_lock)
-                {
-                    return _schedule;
-                }
-            }
-            set
-            {
-                lock (_lock)
-                {
-                    this.CheckNotDisposed();
-                    _schedule = value ?? throw new ArgumentNullException(nameof(IJob.Schedule));
-                    _overriddenDueTime = null;
-                    this.UpdateScheduleDueTime();
-                }
-            }
-        }
-
-        internal DateTimeOffset? OverriddenDueTime
-        {
-            get
-            {
-                lock (_lock)
-                {
-                    return _overriddenDueTime;
-                }
-            }
-            set
-            {
-                lock (_lock)
-                {
-                    this.CheckNotDisposed();
-
-                    var now = TimeProvider.GetCurrentTime();
-                    if (now > value)
-                    {
-                        throw new  InvalidOperationException("Cannot override due time in the past."); // already came
-                    }
-
-                    _overriddenDueTime = value;
-                }
-            }
-        }
-
-        internal void UpdateScheduleDueTime()
-        {
-            var now = TimeProvider.GetCurrentTime();
             lock (_lock)
             {
-                if (_isDisposed)
+                this.CheckNotDisposed();
+                _schedule = value ?? throw new ArgumentNullException(nameof(IJob.Schedule));
+                _overriddenDueTime = null;
+                this.UpdateScheduleDueTime();
+            }
+        }
+    }
+
+    internal DateTimeOffset? OverriddenDueTime
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _overriddenDueTime;
+            }
+        }
+        set
+        {
+            lock (_lock)
+            {
+                this.CheckNotDisposed();
+
+                var now = TimeProvider.GetCurrentTime();
+                if (now > value)
+                {
+                    throw new InvalidOperationException("Cannot override due time in the past."); // already came
+                }
+
+                _overriddenDueTime = value;
+            }
+        }
+    }
+
+    internal void UpdateScheduleDueTime()
+    {
+        var now = TimeProvider.GetCurrentTime();
+        lock (_lock)
+        {
+            if (_isDisposed)
+            {
+                _logger.LogWarningEx(
+                    null,
+                    $"Rejected attempt to update schedule due time of an exposed '{this.GetType().FullName}'.",
+                    this.GetType(),
+                    nameof(UpdateScheduleDueTime));
+                return;
+            }
+
+            try
+            {
+                _scheduleDueTime = _schedule.GetDueTimeAfter(now.AddTicks(1));
+                if (_scheduleDueTime < now)
                 {
                     _logger.LogWarningEx(
                         null,
-                        $"Rejected attempt to update schedule due time of an exposed '{this.GetType().FullName}'.",
+                        "Due time is earlier than current time. Due time is changed to 'never'.",
                         this.GetType(),
                         nameof(UpdateScheduleDueTime));
-                    return;
-                }
-
-                try
-                {
-                    _scheduleDueTime = _schedule.GetDueTimeAfter(now.AddTicks(1));
-                    if (_scheduleDueTime < now)
-                    {
-                        _logger.LogWarningEx(
-                            null,
-                            "Due time is earlier than current time. Due time is changed to 'never'.",
-                            this.GetType(),
-                            nameof(UpdateScheduleDueTime));
-                        _scheduleDueTime = JobExtensions.Never;
-                    }
-                    else if (_scheduleDueTime > JobExtensions.Never)
-                    {
-                        _logger.LogWarningEx(
-                            null,
-                            "Due time is later than 'never'. Due time is changed to 'never'.",
-                            this.GetType(),
-                            nameof(UpdateScheduleDueTime));
-
-                        _scheduleDueTime = JobExtensions.Never;
-                    }
-
-                }
-                catch (Exception ex)
-                {
                     _scheduleDueTime = JobExtensions.Never;
-
+                }
+                else if (_scheduleDueTime > JobExtensions.Never)
+                {
                     _logger.LogWarningEx(
-                        ex,
-                        "An exception was thrown on attempt to calculate due time. Due time is changed to 'never'.",
+                        null,
+                        "Due time is later than 'never'. Due time is changed to 'never'.",
                         this.GetType(),
                         nameof(UpdateScheduleDueTime));
-                }
-            }
-        }
 
-        internal DueTimeInfo GetDueTimeInfo()
-        {
-            lock (_lock)
-            {
-                return new DueTimeInfo(_scheduleDueTime, _overriddenDueTime);
-            }
-        }
-
-        #endregion
-
-        #region IDisposable
-
-        public void Dispose()
-        {
-            lock (_lock)
-            {
-                if (_isDisposed)
-                {
-                    return;
+                    _scheduleDueTime = JobExtensions.Never;
                 }
 
-                _isDisposed = true;
+            }
+            catch (Exception ex)
+            {
+                _scheduleDueTime = JobExtensions.Never;
+
+                _logger.LogWarningEx(
+                    ex,
+                    "An exception was thrown on attempt to calculate due time. Due time is changed to 'never'.",
+                    this.GetType(),
+                    nameof(UpdateScheduleDueTime));
             }
         }
-
-        #endregion
     }
+
+    internal DueTimeInfo GetDueTimeInfo()
+    {
+        lock (_lock)
+        {
+            return new DueTimeInfo(_scheduleDueTime, _overriddenDueTime);
+        }
+    }
+
+    #endregion
+
+    #region IDisposable
+
+    public void Dispose()
+    {
+        lock (_lock)
+        {
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            _isDisposed = true;
+        }
+    }
+
+    #endregion
 }

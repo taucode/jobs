@@ -1,20 +1,18 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace TauCode.Jobs.Exceptions
+namespace TauCode.Jobs.Exceptions;
+
+[Serializable]
+public class JobFailedToStartException : Exception
 {
-    [Serializable]
-    public class JobFailedToStartException : Exception
+    public JobFailedToStartException(Exception inner)
+        : base("Job failed to start.", inner)
     {
-        public JobFailedToStartException(Exception inner)
-            : base("Job failed to start.", inner)
-        {
-        }
+    }
 
-        protected JobFailedToStartException(
-            SerializationInfo info,
-            StreamingContext context) : base(info, context)
-        {
-        }
+    protected JobFailedToStartException(
+        SerializationInfo info,
+        StreamingContext context) : base(info, context)
+    {
     }
 }

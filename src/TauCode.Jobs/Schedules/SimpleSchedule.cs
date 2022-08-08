@@ -1,119 +1,115 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using TauCode.Extensions;
+﻿using TauCode.Extensions;
 
-namespace TauCode.Jobs.Schedules
+namespace TauCode.Jobs.Schedules;
+
+// todo clean up
+public class SimpleSchedule : ISchedule
 {
-    // todo clean up
-    public class SimpleSchedule : ISchedule
+    private readonly IList<DateTimeOffset> _concreteMoments;
+
+    public SimpleSchedule(
+        SimpleScheduleKind kind,
+        int multiplier,
+        DateTimeOffset baseTime,
+        IEnumerable<TimeSpan> concreteOffsets = null)
     {
-        private readonly IList<DateTimeOffset> _concreteMoments;
-
-        public SimpleSchedule(
-            SimpleScheduleKind kind,
-            int multiplier,
-            DateTimeOffset baseTime,
-            IEnumerable<TimeSpan> concreteOffsets = null)
+        if (multiplier <= 0)
         {
-            if (multiplier <= 0)
-            {
-                throw new NotImplementedException(); // todo
-            }
-
-            this.Kind = kind;
-            this.Multiplier = multiplier;
-            this.BaseTime = baseTime;
-
-            this.TimeSpan = this.CalculateTimeSpan();
-
-            var concreteMoments = new List<DateTimeOffset>();
-
-            if (concreteOffsets != null)
-            {
-                var curr = baseTime;
-                foreach (var offset in concreteOffsets)
-                {
-                    // todo: non-negative
-                    curr = curr.Add(offset);
-                    concreteMoments.Add(curr);
-                }
-            }
-
-            _concreteMoments = concreteMoments
-                .Distinct()
-                .OrderBy(x => x)
-                .ToList();
+            throw new NotImplementedException(); // todo
         }
 
-        private TimeSpan CalculateTimeSpan()
+        this.Kind = kind;
+        this.Multiplier = multiplier;
+        this.BaseTime = baseTime;
+
+        this.TimeSpan = this.CalculateTimeSpan();
+
+        var concreteMoments = new List<DateTimeOffset>();
+
+        if (concreteOffsets != null)
         {
-            TimeSpan timeSpan;
-
-            switch (this.Kind)
+            var curr = baseTime;
+            foreach (var offset in concreteOffsets)
             {
-                case SimpleScheduleKind.Second:
-                    timeSpan = TimeSpan.FromSeconds(this.Multiplier);
-                    break;
-
-                case SimpleScheduleKind.Minute:
-                    timeSpan = TimeSpan.FromMinutes(this.Multiplier);
-                    break;
-
-                case SimpleScheduleKind.Hour:
-                    timeSpan = TimeSpan.FromHours(this.Multiplier);
-                    break;
-
-                case SimpleScheduleKind.Day:
-                    timeSpan = TimeSpan.FromDays(this.Multiplier);
-                    break;
-
-                default:
-                    throw new ArgumentOutOfRangeException();
+                // todo: non-negative
+                curr = curr.Add(offset);
+                concreteMoments.Add(curr);
             }
-
-            return timeSpan;
         }
 
-        public SimpleScheduleKind Kind { get; }
+        _concreteMoments = concreteMoments
+            .Distinct()
+            .OrderBy(x => x)
+            .ToList();
+    }
 
-        public int Multiplier { get; }
+    private TimeSpan CalculateTimeSpan()
+    {
+        TimeSpan timeSpan;
 
-        public DateTimeOffset BaseTime { get; }
-
-        public TimeSpan TimeSpan { get; }
-
-        public string Description { get; set; }
-
-        public DateTimeOffset GetDueTimeAfter(DateTimeOffset after)
+        switch (this.Kind)
         {
-            if (after <= this.BaseTime)
-            {
-                return this.BaseTime;
-            }
-            else
-            {
-                var spanCount = (int)((after - this.BaseTime).TotalMilliseconds / this.TimeSpan.TotalMilliseconds);
-                var result = this.BaseTime.AddMilliseconds(spanCount * this.TimeSpan.TotalMilliseconds);
+            case SimpleScheduleKind.Second:
+                timeSpan = TimeSpan.FromSeconds(this.Multiplier);
+                break;
 
-                while (true)
+            case SimpleScheduleKind.Minute:
+                timeSpan = TimeSpan.FromMinutes(this.Multiplier);
+                break;
+
+            case SimpleScheduleKind.Hour:
+                timeSpan = TimeSpan.FromHours(this.Multiplier);
+                break;
+
+            case SimpleScheduleKind.Day:
+                timeSpan = TimeSpan.FromDays(this.Multiplier);
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        return timeSpan;
+    }
+
+    public SimpleScheduleKind Kind { get; }
+
+    public int Multiplier { get; }
+
+    public DateTimeOffset BaseTime { get; }
+
+    public TimeSpan TimeSpan { get; }
+
+    public string Description { get; set; }
+
+    public DateTimeOffset GetDueTimeAfter(DateTimeOffset after)
+    {
+        if (after <= this.BaseTime)
+        {
+            return this.BaseTime;
+        }
+        else
+        {
+            var spanCount = (int)((after - this.BaseTime).TotalMilliseconds / this.TimeSpan.TotalMilliseconds);
+            var result = this.BaseTime.AddMilliseconds(spanCount * this.TimeSpan.TotalMilliseconds);
+
+            while (true)
+            {
+                if (result > after)
                 {
-                    if (result > after)
+                    // maybe there is concrete moment between 'after' and 'result'?
+                    var resultCopy = result; // capture of variable!
+                    var idx = _concreteMoments.FindFirstIndex(x => x > after && x < resultCopy);
+
+                    if (idx >= 0)
                     {
-                        // maybe there is concrete moment between 'after' and 'result'?
-                        var resultCopy = result; // capture of variable!
-                        var idx = _concreteMoments.FindFirstIndex(x => x > after && x < resultCopy);
-
-                        if (idx >= 0)
-                        {
-                            result = _concreteMoments[idx];
-                        }
-
-                        return result;
+                        result = _concreteMoments[idx];
                     }
 
-                    result = result.AddMilliseconds(this.TimeSpan.TotalMilliseconds);
+                    return result;
                 }
+
+                result = result.AddMilliseconds(this.TimeSpan.TotalMilliseconds);
             }
         }
     }
