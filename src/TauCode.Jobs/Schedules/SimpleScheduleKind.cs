@@ -1,10 +1,9 @@
-﻿namespace TauCode.Jobs.Schedules
+﻿namespace TauCode.Jobs.Schedules;
+
+public enum SimpleScheduleKind
 {
-    public enum SimpleScheduleKind
-    {
-        Second = 1,
-        Minute,
-        Hour,
-        Day
-    }
+    Second = 1,
+    Minute,
+    Hour,
+    Day
 }

@@ -1,24 +1,21 @@
-﻿using System;
+﻿namespace TauCode.Jobs.Schedules;
 
-namespace TauCode.Jobs.Schedules
+// todo: internal.
+public sealed class NeverSchedule : ISchedule
 {
-    // todo: internal.
-    public sealed class NeverSchedule : ISchedule
+    private const string NeverDescription = "Technical schedule which due time never occurs";
+
+    public static ISchedule Instance = new NeverSchedule();
+
+    private NeverSchedule()
     {
-        private const string NeverDescription = "Technical schedule which due time never occurs";
-
-        public static ISchedule Instance = new NeverSchedule();
-
-        private NeverSchedule()
-        {   
-        }
-
-        public string Description
-        {
-            get => NeverDescription;
-            set => throw new NotSupportedException();
-        }
-
-        public DateTimeOffset GetDueTimeAfter(DateTimeOffset after) => JobExtensions.Never; // todo: check argument
     }
+
+    public string Description
+    {
+        get => NeverDescription;
+        set => throw new NotSupportedException();
+    }
+
+    public DateTimeOffset GetDueTimeAfter(DateTimeOffset after) => JobExtensions.Never; // todo: check argument
 }

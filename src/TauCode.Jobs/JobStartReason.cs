@@ -1,9 +1,8 @@
-﻿namespace TauCode.Jobs
+﻿namespace TauCode.Jobs;
+
+public enum JobStartReason
 {
-    public enum JobStartReason
-    {
-        ScheduleDueTime = 1,
-        OverriddenDueTime = 2,
-        Force = 3,
-    }
+    ScheduleDueTime = 1,
+    OverriddenDueTime = 2,
+    Force = 3,
 }

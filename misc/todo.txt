@@ -1,5 +1,3 @@
 ﻿2020-10-11
 ==========
     1. Consider this: https://www.paradigm.net.co/; https://www.nuget.org/packages/Paradigm.Services.WorkingTasks
-
-

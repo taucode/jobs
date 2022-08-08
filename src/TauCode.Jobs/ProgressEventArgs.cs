@@ -1,14 +1,11 @@
-﻿using System;
+﻿namespace TauCode.Jobs;
 
-namespace TauCode.Jobs
+public class ProgressEventArgs : EventArgs
 {
-    public class ProgressEventArgs : EventArgs
+    public ProgressEventArgs(decimal percentCompleted)
     {
-        public ProgressEventArgs(decimal percentCompleted)
-        {
-            this.PercentCompleted = percentCompleted;
-        }
-
-        public decimal PercentCompleted { get; }
+        this.PercentCompleted = percentCompleted;
     }
+
+    public decimal PercentCompleted { get; }
 }

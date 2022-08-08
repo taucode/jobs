@@ -1,10 +1,7 @@
-﻿using System;
+﻿namespace TauCode.Jobs.Schedules;
 
-namespace TauCode.Jobs.Schedules
+public interface ISchedule
 {
-    public interface ISchedule
-    {
-        string Description { get; set; }
-        DateTimeOffset GetDueTimeAfter(DateTimeOffset after);
-    }
+    string Description { get; set; }
+    DateTimeOffset GetDueTimeAfter(DateTimeOffset after);
 }
