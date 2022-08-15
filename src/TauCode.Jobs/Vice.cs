@@ -1,8 +1,11 @@
-﻿using TauCode.Extensions;
+﻿using Serilog;
+using TauCode.Extensions;
 using TauCode.Infrastructure.Time;
 using TauCode.Working;
 
 namespace TauCode.Jobs;
+
+// todo clean
 
 internal class Vice : LoopWorkerBase
 {
@@ -15,7 +18,8 @@ internal class Vice : LoopWorkerBase
 
     #region Constructor
 
-    internal Vice()
+    internal Vice(ILogger? logger)
+        : base(logger)
     {
         _employees = new Dictionary<string, Employee>();
         _lock = new object();
@@ -27,7 +31,12 @@ internal class Vice : LoopWorkerBase
 
     protected override Task<TimeSpan> DoWork(CancellationToken token)
     {
-        this.Logger.LogDebugEx(null, "Entered method", this.GetType(), nameof(DoWork));
+        // todo: verbose.
+        this.ContextLogger?.Debug(
+            "Inside method '{0:l}'. Entered.",
+            nameof(DoWork));
+
+        //this.Logger.LogDebugEx(null, "Entered method", this.GetType(), nameof(DoWork));
 
         var now = TimeProvider.GetCurrentTime();
         var employeesToWakeUp = new List<Tuple<Employee, DueTimeInfo>>();
@@ -69,35 +78,63 @@ internal class Vice : LoopWorkerBase
             switch (startResult)
             {
                 case JobStartResult.Started:
-                    this.Logger.LogInformationEx(
-                        null,
-                        $"Job '{employee.Name}' was started. Reason: '{reason}'.",
-                        this.GetType(),
-                        nameof(DoWork));
+                    this.ContextLogger?.Information(
+                        "Inside method '{0:l}'. Job '{1:l}' was started. Reason: '{2}'.",
+                        nameof(DoWork),
+                        employee.Name,
+                        reason);
+
+                    //this.Logger.LogInformationEx(
+                    //    null,
+                    //    $"Job '{employee.Name}' was started. Reason: '{reason}'.",
+                    //    this.GetType(),
+                    //    nameof(DoWork));
+
                     break;
 
                 case JobStartResult.CompletedSynchronously:
-                    this.Logger.LogInformationEx(
-                        null,
-                        $"Job '{employee.Name}' completed synchronously. Reason of start was '{reason}'.",
-                        this.GetType(),
-                        nameof(DoWork));
+                    this.ContextLogger?.Information(
+                        "Inside method '{0:l}'. Job '{1:l}' completed synchronously. Reason of start was '{2}'.",
+                        nameof(DoWork),
+                        employee.Name,
+                        reason);
+
+                    //this.Logger.LogInformationEx(
+                    //    null,
+                    //    $"Job '{employee.Name}' completed synchronously. Reason of start was '{reason}'.",
+                    //    this.GetType(),
+                    //    nameof(DoWork));
+
                     break;
 
                 case JobStartResult.AlreadyRunning:
-                    this.Logger.LogInformationEx(
-                        null,
-                        $"Job '{employee.Name}' already running. Attempted to start due to reason '{reason}'.",
-                        this.GetType(),
-                        nameof(DoWork));
+                    this.ContextLogger?.Information(
+                        "Inside method '{0:l}'. Job '{1:l}' already running. Attempted to start due to reason '{2}'.",
+                        nameof(DoWork),
+                        employee.Name,
+                        reason);
+
+                    //this.Logger.LogInformationEx(
+                    //    null,
+                    //    $"Job '{employee.Name}' already running. Attempted to start due to reason '{reason}'.",
+                    //    this.GetType(),
+                    //    nameof(DoWork));
+
                     break;
 
                 case JobStartResult.Disabled:
-                    this.Logger.LogInformationEx(
-                        null,
-                        $"Job '{employee.Name}' is disabled. Attempted to start due to reason '{reason}'.",
-                        this.GetType(),
-                        nameof(DoWork));
+                    this.ContextLogger?.Information(
+                        "Inside method '{0:l}'. Job '{1:l}' is disabled. Attempted to start due to reason '{2}'.",
+                        nameof(DoWork),
+                        employee.Name,
+                        reason);
+
+                    //this.Logger.LogInformationEx(
+                    //    null,
+                    //    $"Job '{employee.Name}' is disabled. Attempted to start due to reason '{reason}'.",
+                    //    this.GetType(),
+                    //    nameof(DoWork));
+
                     break;
             }
 
@@ -117,16 +154,22 @@ internal class Vice : LoopWorkerBase
 
         var vacationTimeout = earliest - now;
 
-        this.Logger.LogDebugEx(
-            null,
-            $"Going to vacation, length is '{vacationTimeout}'.",
-            this.GetType(),
-            nameof(DoWork));
+        // todo: verbose
+        this.ContextLogger?.Debug(
+            "Inside method '{0:l}'. Going to vacation, length is '{1}'.",
+            nameof(DoWork),
+            vacationTimeout);
+
+        //this.Logger.LogDebugEx(
+        //    null,
+        //    $"Going to vacation, length is '{vacationTimeout}'.",
+        //    this.GetType(),
+        //    nameof(DoWork));
 
         return Task.FromResult(vacationTimeout);
     }
 
-    protected override void OnDisposed()
+    protected override void OnAfterDisposed()
     {
         IList<Employee> list;
         lock (_lock)
@@ -155,7 +198,7 @@ internal class Vice : LoopWorkerBase
                 throw new InvalidOperationException($"Job '{jobName}' already exists.");
             }
 
-            var employee = new Employee(this, jobName);
+            var employee = new Employee(this, this.OriginalLogger, jobName);
 
             _employees.Add(employee.Name, employee);
 
@@ -196,11 +239,16 @@ internal class Vice : LoopWorkerBase
 
     internal void PulseWork(string pulseReason)
     {
-        this.Logger.LogDebugEx(
-            null,
-            pulseReason,
-            this.GetType(),
-            nameof(PulseWork));
+        this.ContextLogger?.Debug(
+            "Inside method '{0:l}'. Pulse reason: {1}",
+            nameof(PulseWork),
+            pulseReason);
+
+        //this.Logger.LogDebugEx(
+        //    null,
+        //    pulseReason,
+        //    this.GetType(),
+        //    nameof(PulseWork));
 
         this.AbortVacation();
     }

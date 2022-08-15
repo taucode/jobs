@@ -150,6 +150,8 @@ public partial class JobTests
         }
         catch (Exception ex)
         {
+            // todo: get rid of these try/catch since all ut-s are green now [2022-08-15]
+
             var sb = new StringBuilder();
             sb.AppendLine("*** Test Failed ***");
             sb.AppendLine(ex.ToString());

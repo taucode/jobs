@@ -1,21 +1,21 @@
-﻿using Microsoft.Extensions.Logging;
-using Moq;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Serilog;
-using Serilog.Extensions.Logging;
 using System.Text;
 using TauCode.Extensions;
-using TauCode.Infrastructure.Logging;
 using TauCode.Infrastructure.Time;
 using TauCode.IO;
 using TauCode.Jobs.Schedules;
 
 namespace TauCode.Jobs.Tests.Jobs;
 
+// todo clean
+
 [TestFixture]
 public class JobManagerTests
 {
-    private StringLogger _logger;
+    private ILogger _logger = null!;
+    private StringWriterWithEncoding _writer = null!;
+
     private string CurrentLog => _logger.ToString();
 
     [SetUp]
@@ -23,20 +23,31 @@ public class JobManagerTests
     {
         TimeProvider.Reset();
 
-        _logger = new StringLogger();
-
-        var collection = new LoggerProviderCollection();
-
-        Log.Logger = new LoggerConfiguration()
-            .WriteTo.Providers(collection)
-            .MinimumLevel
-            .Debug()
+        _writer = new StringWriterWithEncoding(Encoding.UTF8);
+        _logger = new LoggerConfiguration()
+            .WriteTo.TextWriter(
+                _writer,
+                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}]{ObjectTag} {Message}{NewLine}{Exception}"
+            )
+            .MinimumLevel.Verbose()
             .CreateLogger();
+        Log.Logger = _logger;
 
-        var providerMock = new Mock<ILoggerProvider>();
-        providerMock.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(_logger);
 
-        collection.AddProvider(providerMock.Object);
+        //_logger = new StringLogger();
+
+        //var collection = new LoggerProviderCollection();
+
+        //Log.Logger = new LoggerConfiguration()
+        //    .WriteTo.Providers(collection)
+        //    .MinimumLevel
+        //    .Debug()
+        //    .CreateLogger();
+
+        //var providerMock = new Mock<ILoggerProvider>();
+        //providerMock.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(_logger);
+
+        //collection.AddProvider(providerMock.Object);
 
     }
 
@@ -48,7 +59,7 @@ public class JobManagerTests
         // Arrange
 
         // Act
-        using IJobManager jobManager = new JobManager();
+        using IJobManager jobManager = new JobManager(_logger);
 
         // Assert
         Assert.That(jobManager.IsRunning, Is.False);
