@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Serilog;
 using TauCode.Working;
 
 namespace TauCode.Jobs;
@@ -13,9 +13,9 @@ public class JobManager : IJobManager
 
     #region Constructor
 
-    public JobManager()
+    public JobManager(ILogger? logger)
     {
-        _vice = new Vice();
+        _vice = new Vice(logger);
     }
 
     #endregion
@@ -96,8 +96,8 @@ public class JobManager : IJobManager
 
     public ILogger Logger
     {
-        get => _vice.Logger;
-        set => _vice.Logger = value;
+        get => /*_vice.Logger*/ throw new NotImplementedException();
+        set => /*_vice.Logger = value*/ throw new NotImplementedException();
     }
 
     #endregion

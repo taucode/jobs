@@ -1,7 +1,10 @@
-﻿using TauCode.Jobs.Instruments;
+﻿using Serilog;
+using TauCode.Jobs.Instruments;
 using TauCode.Jobs.Schedules;
 
 namespace TauCode.Jobs;
+
+// todo clean
 
 internal class Employee : IDisposable
 {
@@ -15,13 +18,13 @@ internal class Employee : IDisposable
 
     #region Constructor
 
-    internal Employee(Vice vice, string name)
+    internal Employee(Vice vice, ILogger? logger, string name)
     {
         this.Name = name;
 
         _vice = vice;
         _job = new Job(this);
-        _runner = new Runner(this.Name, _vice.Logger);
+        _runner = new Runner(this.Name, /*_vice.Logger*/ logger);
     }
 
     #endregion

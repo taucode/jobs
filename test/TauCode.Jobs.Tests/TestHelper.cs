@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Serilog;
 using TauCode.Infrastructure.Time;
 
+// todo clean
 namespace TauCode.Jobs.Tests;
 
 internal static class TestHelper
@@ -20,8 +21,8 @@ internal static class TestHelper
 
     internal static IJobManager CreateJobManager(bool start, ILogger logger)
     {
-        var jobManager = new JobManager();
-        jobManager.Logger = logger;
+        var jobManager = new JobManager(logger);
+        //jobManager.Logger = logger;
 
         if (start)
         {

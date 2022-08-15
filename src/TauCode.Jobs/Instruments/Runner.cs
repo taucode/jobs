@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Serilog;
 
 namespace TauCode.Jobs.Instruments;
 
