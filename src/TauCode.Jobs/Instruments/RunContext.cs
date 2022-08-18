@@ -5,8 +5,6 @@ using TauCode.IO;
 
 namespace TauCode.Jobs.Instruments;
 
-// todo clean
-
 internal class RunContext
 {
     #region Fields
@@ -116,12 +114,6 @@ internal class RunContext
             "Inside method '{0:l}'. Task ended. Status: '{1}'.",
             nameof(EndTask),
             task.Status);
-
-        //_logger.LogDebugEx(
-        //    task.Exception?.InnerException,
-        //    $"Task ended. Status: {task.Status}.",
-        //    this.GetType(),
-        //    nameof(EndTask));
 
         JobRunStatus status;
         Exception exception = null;

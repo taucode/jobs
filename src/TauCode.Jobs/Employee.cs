@@ -4,13 +4,11 @@ using TauCode.Jobs.Schedules;
 
 namespace TauCode.Jobs;
 
-// todo clean
-
 internal class Employee : IDisposable
 {
     #region Fields
 
-    private readonly Vice _vice;
+    private readonly JobManager _jobManager;
     private readonly Job _job;
     private readonly Runner _runner;
 
@@ -18,13 +16,13 @@ internal class Employee : IDisposable
 
     #region Constructor
 
-    internal Employee(Vice vice, ILogger? logger, string name)
+    internal Employee(JobManager jobManager, ILogger? logger, string name)
     {
         this.Name = name;
 
-        _vice = vice;
+        _jobManager = jobManager;
         _job = new Job(this);
-        _runner = new Runner(this.Name, /*_vice.Logger*/ logger);
+        _runner = new Runner(this.Name, logger);
     }
 
     #endregion
@@ -51,7 +49,7 @@ internal class Employee : IDisposable
         set
         {
             _runner.DueTimeHolder.Schedule = value;
-            _vice.PulseWork($"Pulsing due to '{nameof(Schedule)}'.");
+            _jobManager.PulseWork($"Pulsing due to '{nameof(Schedule)}'.");
         }
     }
 
@@ -84,7 +82,7 @@ internal class Employee : IDisposable
     internal void OverrideDueTime(DateTimeOffset? dueTime)
     {
         _runner.DueTimeHolder.OverriddenDueTime = dueTime;
-        _vice.PulseWork($"Pulsing due to '{nameof(OverrideDueTime)}'.");
+        _jobManager.PulseWork($"Pulsing due to '{nameof(OverrideDueTime)}'.");
     }
 
     internal void ForceStart() => this.Start(JobStartReason.Force, null);
@@ -99,9 +97,9 @@ internal class Employee : IDisposable
 
     #endregion
 
-    #region Internal - Interface for Vice
+    #region Internal - Interface for JobManager
 
-    internal DueTimeInfo? GetDueTimeInfoForVice(bool future) => _runner.GetDueTimeInfoForVice(future);
+    internal DueTimeInfo? GetDueTimeInfoForJobManager(bool future) => _runner.GetDueTimeInfoForJobManager(future);
 
     internal JobStartResult Start(JobStartReason startReason, CancellationToken? token) =>
         _runner.Start(startReason, token);
@@ -113,7 +111,7 @@ internal class Employee : IDisposable
     public void Dispose()
     {
         _runner.Dispose();
-        _vice.Remove(this.Name);
+        _jobManager.Remove(this.Name);
     }
 
     #endregion

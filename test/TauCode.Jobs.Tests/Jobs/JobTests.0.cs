@@ -6,12 +6,9 @@ using TauCode.IO;
 
 namespace TauCode.Jobs.Tests.Jobs;
 
-// todo clean
-
 [TestFixture]
 public partial class JobTests
 {
-    //private StringLogger _logger;
     private ILogger _logger = null!;
     private StringWriterWithEncoding _writer = null!;
 
@@ -37,20 +34,5 @@ public partial class JobTests
             .MinimumLevel.Verbose()
             .CreateLogger();
         Log.Logger = _logger;
-
-        //_logger = new StringLogger();
-
-        //var collection = new LoggerProviderCollection();
-
-        //Log.Logger = new LoggerConfiguration()
-        //    .WriteTo.Providers(collection)
-        //    .MinimumLevel
-        //    .Debug()
-        //    .CreateLogger();
-
-        //var providerMock = new Mock<ILoggerProvider>();
-        //providerMock.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(_logger);
-
-        //collection.AddProvider(providerMock.Object);
     }
 }

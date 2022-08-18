@@ -11,7 +11,7 @@ public partial class JobTests
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         // Act
         var name = job.Name;
@@ -25,7 +25,7 @@ public partial class JobTests
     {
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.IsEnabled = true;
 
@@ -41,7 +41,7 @@ public partial class JobTests
     {
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.IsEnabled = true;
 
@@ -63,7 +63,7 @@ public partial class JobTests
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.IsEnabled = true;
 
@@ -87,7 +87,7 @@ public partial class JobTests
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
         job.Dispose();
 
         // Act

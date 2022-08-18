@@ -4,7 +4,6 @@ using TauCode.Jobs.Schedules;
 
 namespace TauCode.Jobs.Instruments;
 
-// todo clean
 internal class DueTimeHolder : IDisposable
 {
     #region Fields
@@ -131,12 +130,6 @@ internal class DueTimeHolder : IDisposable
                         "Inside method '{0:l}'. Due time is later than 'never'. Due time is changed to 'never'.",
                         nameof(UpdateScheduleDueTime));
 
-                    //_logger.LogWarningEx(
-                    //    null,
-                    //    "Due time is later than 'never'. Due time is changed to 'never'.",
-                    //    this.GetType(),
-                    //    nameof(UpdateScheduleDueTime));
-
                     _scheduleDueTime = JobExtensions.Never;
                 }
 
@@ -149,12 +142,6 @@ internal class DueTimeHolder : IDisposable
                     ex,
                     "Inside method '{0:l}'. An exception was thrown on attempt to calculate due time. Due time is changed to 'never'.",
                     nameof(UpdateScheduleDueTime));
-
-                //_logger.LogWarningEx(
-                //    ex,
-                //    "An exception was thrown on attempt to calculate due time. Due time is changed to 'never'.",
-                //    this.GetType(),
-                //    nameof(UpdateScheduleDueTime));
             }
         }
     }

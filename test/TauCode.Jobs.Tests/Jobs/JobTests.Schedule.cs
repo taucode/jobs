@@ -22,7 +22,7 @@ public partial class JobTests
 
         var start = "2000-01-01Z".ToUtcDateOffset();
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         // Act
         var schedule = job.Schedule;
@@ -43,7 +43,7 @@ public partial class JobTests
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         // Act
         var ex = Assert.Throws<ArgumentNullException>(() => job.Schedule = null);
@@ -63,7 +63,7 @@ public partial class JobTests
         TimeProvider.Override(timeMachine);
 
         var name = "job1";
-        var job = jobManager.Create(name);
+        var job = jobManager.CreateJob(name);
         job.IsEnabled = true;
 
         var writer = new StringWriterWithEncoding(Encoding.UTF8);
@@ -90,7 +90,7 @@ public partial class JobTests
     {
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         var start = "2000-01-01Z".ToUtcDateOffset();
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -128,7 +128,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.Routine = async (parameter, tracker, output, token) =>
         {
@@ -187,7 +187,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.Routine = async (parameter, tracker, output, token) =>
         {
@@ -258,7 +258,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.Routine = async (parameter, tracker, output, token) =>
         {
@@ -315,7 +315,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.Routine = async (parameter, tracker, output, token) =>
         {
@@ -369,7 +369,7 @@ public partial class JobTests
     {
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         var start = "2000-01-01Z".ToUtcDateOffset();
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -405,7 +405,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
         var schedule1 = new SimpleSchedule(SimpleScheduleKind.Second, 1, start);
         job.Schedule = schedule1; // job will be started by due time of this schedule
 
@@ -473,7 +473,7 @@ public partial class JobTests
     {
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         var start = "2000-01-01Z".ToUtcDateOffset();
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -505,7 +505,7 @@ public partial class JobTests
     {
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         var start = "2000-01-01Z".ToUtcDateOffset();
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -526,7 +526,7 @@ public partial class JobTests
     {
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         var start = "2000-01-01Z".ToUtcDateOffset();
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -583,7 +583,7 @@ public partial class JobTests
     {
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         var start = "2000-01-01Z".ToUtcDateOffset();
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -636,7 +636,7 @@ public partial class JobTests
     {
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         var start = "2000-01-01Z".ToUtcDateOffset();
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);

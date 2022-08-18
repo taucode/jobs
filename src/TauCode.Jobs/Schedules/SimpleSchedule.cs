@@ -2,7 +2,6 @@
 
 namespace TauCode.Jobs.Schedules;
 
-// todo clean up
 public class SimpleSchedule : ISchedule
 {
     private readonly IList<DateTimeOffset> _concreteMoments;

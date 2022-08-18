@@ -18,7 +18,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         // Act
         var info = job.GetInfo(null);
@@ -41,7 +41,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.IsEnabled = true;
 
@@ -96,7 +96,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         // Act
         var ex = Assert.Throws<ArgumentOutOfRangeException>(() => job.GetInfo(-1));
@@ -115,7 +115,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.IsEnabled = true;
 
@@ -153,7 +153,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.IsEnabled = true;
 
@@ -239,7 +239,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.IsEnabled = true;
 
@@ -288,7 +288,6 @@ public partial class JobTests
 
         // !3 - overridden due time
         await timeMachine.WaitUntilSecondsElapse(start, t3);
-        //await _logWriter.WriteLineAsync($"=== t3 came! {t3} ==="); // todo todo00000000
 
         // ^E - after overridden-due-time start
         await timeMachine.WaitUntilSecondsElapse(start, tE);
@@ -301,7 +300,6 @@ public partial class JobTests
 
         // !4 - starts by schedule
         await timeMachine.WaitUntilSecondsElapse(start, t4);
-        //await _logWriter.WriteLineAsync($"=== t4 came! {t4} ==="); // todo dodo000000000000
 
         // ^G - after schedule-due-time start
         await timeMachine.WaitUntilSecondsElapse(start, tG);
@@ -501,7 +499,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.IsEnabled = true;
 
