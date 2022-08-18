@@ -106,7 +106,7 @@ internal class Runner : IDisposable
         }
     }
 
-    internal DueTimeInfo? GetDueTimeInfoForVice(bool future)
+    internal DueTimeInfo? GetDueTimeInfoForJobManager(bool future)
     {
         lock (_lock)
         {

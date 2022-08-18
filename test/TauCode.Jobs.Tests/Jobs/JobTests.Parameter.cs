@@ -20,7 +20,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         // Act
         var parameter = job.Parameter;
@@ -39,7 +39,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         // Act
         object parameter1 = 1;
@@ -77,7 +77,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         ISchedule schedule = new ConcreteSchedule(
             start.AddSeconds(1),
@@ -142,7 +142,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         ISchedule schedule = new ConcreteSchedule(
             start.AddSeconds(1),
@@ -201,7 +201,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         // Act
         job.Parameter = 17;
@@ -222,7 +222,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         // Act
         job.Parameter = 17;

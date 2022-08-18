@@ -17,7 +17,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
         job.IsEnabled = true;
 
         // Act
@@ -25,7 +25,7 @@ public partial class JobTests
 
         // Assert
         Assert.That(job.IsDisposed, Is.True);
-        var names = jobManager.GetNames();
+        var names = jobManager.GetJobNames();
         Assert.That(names, Is.Empty);
 
         var info = job.GetInfo(null);
@@ -47,7 +47,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
         job.IsEnabled = true;
 
         job.Routine = async (parameter, tracker, output, token) =>
@@ -65,7 +65,7 @@ public partial class JobTests
 
         // Assert
         Assert.That(job.IsDisposed, Is.True);
-        var names = jobManager.GetNames();
+        var names = jobManager.GetJobNames();
         Assert.That(names, Is.Empty);
 
         var info = job.GetInfo(null);
@@ -97,7 +97,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
         job.IsEnabled = true;
 
         job.Routine = async (parameter, tracker, output, token) =>
@@ -112,7 +112,7 @@ public partial class JobTests
 
         // Assert
         Assert.That(job.IsDisposed, Is.True);
-        var names = jobManager.GetNames();
+        var names = jobManager.GetJobNames();
         Assert.That(names, Is.Empty);
 
         var info = job.GetInfo(null);

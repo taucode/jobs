@@ -5,10 +5,9 @@ using TauCode.Extensions;
 using TauCode.Infrastructure.Time;
 using TauCode.IO;
 using TauCode.Jobs.Schedules;
+using TauCode.Working;
 
 namespace TauCode.Jobs.Tests.Jobs;
-
-// todo clean
 
 [TestFixture]
 public class JobManagerTests
@@ -16,7 +15,7 @@ public class JobManagerTests
     private ILogger _logger = null!;
     private StringWriterWithEncoding _writer = null!;
 
-    private string CurrentLog => _logger.ToString();
+    private string CurrentLog => _logger.ToString()!;
 
     [SetUp]
     public void SetUp()
@@ -32,23 +31,6 @@ public class JobManagerTests
             .MinimumLevel.Verbose()
             .CreateLogger();
         Log.Logger = _logger;
-
-
-        //_logger = new StringLogger();
-
-        //var collection = new LoggerProviderCollection();
-
-        //Log.Logger = new LoggerConfiguration()
-        //    .WriteTo.Providers(collection)
-        //    .MinimumLevel
-        //    .Debug()
-        //    .CreateLogger();
-
-        //var providerMock = new Mock<ILoggerProvider>();
-        //providerMock.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(_logger);
-
-        //collection.AddProvider(providerMock.Object);
-
     }
 
     #region JobManager.ctor
@@ -62,7 +44,7 @@ public class JobManagerTests
         using IJobManager jobManager = new JobManager(_logger);
 
         // Assert
-        Assert.That(jobManager.IsRunning, Is.False);
+        Assert.That(jobManager.State, Is.EqualTo(WorkerState.Stopped));
         Assert.That(jobManager.IsDisposed, Is.False);
 
         jobManager.Dispose();
@@ -82,9 +64,9 @@ public class JobManagerTests
         jobManager.Start();
 
         // Assert
-        Assert.That(jobManager.IsRunning, Is.True);
+        Assert.That(jobManager.State, Is.EqualTo(WorkerState.Running));
         Assert.That(jobManager.IsDisposed, Is.False);
-        Assert.That(jobManager.GetNames(), Has.Count.Zero);
+        Assert.That(jobManager.GetJobNames(), Has.Count.Zero);
 
         jobManager.Dispose();
     }
@@ -94,13 +76,14 @@ public class JobManagerTests
     {
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
+        jobManager.Name = "Mgr";
         jobManager.Start();
 
         // Act
-        var ex = Assert.Throws<InvalidOperationException>(() => jobManager.Start());
+        var ex = Assert.Throws<InvalidOperationException>(() => jobManager.Start())!;
 
         // Assert
-        Assert.That(ex.Message, Is.EqualTo("Cannot start Job Manager."));
+        Assert.That(ex.Message, Is.EqualTo("Cannot perform operation 'Start'. Worker state is 'Running'. Worker name is 'Mgr'."));
         jobManager.Dispose();
     }
 
@@ -115,7 +98,7 @@ public class JobManagerTests
         var ex = Assert.Throws<ObjectDisposedException>(() => jobManager.Start());
 
         // Assert
-        Assert.That(ex, Has.Message.StartWith("Cannot access a disposed object.")); // todo: uncomment when fix this exception's message in taucode.working
+        Assert.That(ex, Has.Message.StartWith("Cannot access a disposed object."));
         Assert.That(ex.ObjectName, Is.EqualTo(typeof(JobManager).FullName));
 
         jobManager.Dispose();
@@ -132,7 +115,7 @@ public class JobManagerTests
         using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
 
         // Act
-        var isRunning = jobManager.IsRunning;
+        var isRunning = jobManager.State == WorkerState.Running;
 
         // Assert
         Assert.That(isRunning, Is.False);
@@ -146,7 +129,7 @@ public class JobManagerTests
         jobManager.Start();
 
         // Act
-        var isRunning = jobManager.IsRunning;
+        var isRunning = jobManager.State == WorkerState.Running;
 
         // Assert
         Assert.That(isRunning, Is.True);
@@ -162,7 +145,7 @@ public class JobManagerTests
         jobManager.Dispose();
 
         // Act
-        var isRunning = jobManager.IsRunning;
+        var isRunning = jobManager.State == WorkerState.Running;
 
         // Assert
         Assert.That(isRunning, Is.False);
@@ -177,7 +160,7 @@ public class JobManagerTests
         jobManager.Dispose();
 
         // Act
-        var isRunning = jobManager.IsRunning;
+        var isRunning = jobManager.State == WorkerState.Running;
 
         // Assert
         Assert.That(isRunning, Is.False);
@@ -255,10 +238,10 @@ public class JobManagerTests
         using var jobManager = TestHelper.CreateJobManager(false, _logger);
 
         // Act
-        var ex = Assert.Throws<InvalidOperationException>(() => jobManager.Create("job1"));
+        var ex = Assert.Throws<InvalidOperationException>(() => jobManager.CreateJob("job1"));
 
         // Assert
-        Assert.That(ex.Message, Is.EqualTo("Cannot perform operation 'Create'. Job Manager is not running."));
+        Assert.That(ex.Message, Is.EqualTo("Cannot perform operation 'CreateJob'. Job Manager is not running."));
     }
 
     [Test]
@@ -269,7 +252,7 @@ public class JobManagerTests
         jobManager.Start();
 
         // Act
-        var job = jobManager.Create("job1");
+        var job = jobManager.CreateJob("job1");
 
         // Assert
         Assert.That(job.Name, Is.EqualTo("job1"));
@@ -293,7 +276,7 @@ public class JobManagerTests
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
         // Act
-        var ex = Assert.Throws<ArgumentException>(() => jobManager.Create(badJobName));
+        var ex = Assert.Throws<ArgumentException>(() => jobManager.CreateJob(badJobName));
 
         // Assert
         Assert.That(ex.Message, Does.StartWith("Job name cannot be null or empty."));
@@ -306,10 +289,10 @@ public class JobManagerTests
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
         var name = "job1";
-        jobManager.Create(name);
+        jobManager.CreateJob(name);
 
         // Act
-        var ex = Assert.Throws<InvalidOperationException>(() => jobManager.Create(name));
+        var ex = Assert.Throws<InvalidOperationException>(() => jobManager.CreateJob(name));
 
         // Assert
         Assert.That(ex.Message, Is.EqualTo($"Job '{name}' already exists."));
@@ -323,7 +306,7 @@ public class JobManagerTests
         jobManager.Dispose();
 
         // Act
-        var ex = Assert.Throws<ObjectDisposedException>(() => jobManager.Create("job1"));
+        var ex = Assert.Throws<ObjectDisposedException>(() => jobManager.CreateJob("job1"));
 
         // Assert
         Assert.That(ex, Has.Message.StartWith("Cannot access a disposed object."));
@@ -341,10 +324,10 @@ public class JobManagerTests
         using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
 
         // Act
-        var ex = Assert.Throws<InvalidOperationException>(() => jobManager.GetNames());
+        var ex = Assert.Throws<InvalidOperationException>(() => jobManager.GetJobNames());
 
         // Assert
-        Assert.That(ex.Message, Is.EqualTo("Cannot perform operation 'GetNames'. Job Manager is not running."));
+        Assert.That(ex.Message, Is.EqualTo("Cannot perform operation 'GetJobNames'. Job Manager is not running."));
     }
 
     [Test]
@@ -354,11 +337,11 @@ public class JobManagerTests
         using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
         jobManager.Start();
 
-        jobManager.Create("job1");
-        jobManager.Create("job2");
+        jobManager.CreateJob("job1");
+        jobManager.CreateJob("job2");
 
         // Act
-        var jobNames = jobManager.GetNames();
+        var jobNames = jobManager.GetJobNames();
 
         // Assert
         CollectionAssert.AreEquivalent(new string[] { "job1", "job2" }, jobNames);
@@ -369,12 +352,12 @@ public class JobManagerTests
     {
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
-        jobManager.Create("job1");
-        jobManager.Create("job2");
+        jobManager.CreateJob("job1");
+        jobManager.CreateJob("job2");
         jobManager.Dispose();
 
         // Act
-        var ex = Assert.Throws<ObjectDisposedException>(() => jobManager.GetNames());
+        var ex = Assert.Throws<ObjectDisposedException>(() => jobManager.GetJobNames());
 
         // Assert
         Assert.That(ex, Has.Message.StartWith("Cannot access a disposed object."));
@@ -392,10 +375,10 @@ public class JobManagerTests
         using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
 
         // Act
-        var ex = Assert.Throws<InvalidOperationException>(() => jobManager.Get("my-job"));
+        var ex = Assert.Throws<InvalidOperationException>(() => jobManager.GetJob("my-job"));
 
         // Assert
-        Assert.That(ex.Message, Is.EqualTo("Cannot perform operation 'Get'. Job Manager is not running."));
+        Assert.That(ex.Message, Is.EqualTo("Cannot perform operation 'GetJob'. Job Manager is not running."));
     }
 
     [Test]
@@ -404,11 +387,11 @@ public class JobManagerTests
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
         jobManager.Start();
-        var job1 = jobManager.Create("job1");
-        var job2 = jobManager.Create("job2");
+        var job1 = jobManager.CreateJob("job1");
+        var job2 = jobManager.CreateJob("job2");
 
         // Act
-        var gotJob1 = jobManager.Get("job1");
+        var gotJob1 = jobManager.GetJob("job1");
 
         // Assert
         Assert.That(gotJob1, Is.SameAs(job1));
@@ -424,7 +407,7 @@ public class JobManagerTests
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
         // Act
-        var ex = Assert.Throws<ArgumentException>(() => jobManager.Get(badJobName));
+        var ex = Assert.Throws<ArgumentException>(() => jobManager.GetJob(badJobName));
 
         // Assert
         Assert.That(ex.Message, Does.StartWith("Job name cannot be null or empty."));
@@ -437,11 +420,11 @@ public class JobManagerTests
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
-        jobManager.Create("job1");
-        jobManager.Create("job2");
+        jobManager.CreateJob("job1");
+        jobManager.CreateJob("job2");
 
         // Act
-        var ex = Assert.Throws<InvalidOperationException>(() => jobManager.Get("non-existing"));
+        var ex = Assert.Throws<InvalidOperationException>(() => jobManager.GetJob("non-existing"));
 
         // Assert
         Assert.That(ex.Message, Is.EqualTo("Job not found: 'non-existing'."));
@@ -453,12 +436,12 @@ public class JobManagerTests
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
-        jobManager.Create("job1");
-        jobManager.Create("job2");
+        jobManager.CreateJob("job1");
+        jobManager.CreateJob("job2");
         jobManager.Dispose();
 
         // Act
-        var ex = Assert.Throws<ObjectDisposedException>(() => jobManager.Get("job1"));
+        var ex = Assert.Throws<ObjectDisposedException>(() => jobManager.GetJob("job1"));
 
         // Assert
         Assert.That(ex, Has.Message.StartWith("Cannot access a disposed object."));
@@ -520,10 +503,10 @@ public class JobManagerTests
         TimeProvider.Override(ShiftedTimeProvider.CreateTimeMachine(start));
 
 
-        var job1 = jobManager.Create("job1");
+        var job1 = jobManager.CreateJob("job1");
         job1.IsEnabled = true;
 
-        var job2 = jobManager.Create("job2");
+        var job2 = jobManager.CreateJob("job2");
         job2.IsEnabled = true;
 
         job1.Output = new StringWriterWithEncoding(Encoding.UTF8);
@@ -566,9 +549,6 @@ public class JobManagerTests
         await Task.Delay(2500); // 3 iterations should be completed: ~400, ~1400, ~2400 todo: ut this
 
         // Act
-        // todo: these two wars are not used.
-        var jobInfoBeforeDispose1 = job1.GetInfo(null);
-        var jobInfoBeforeDispose2 = job2.GetInfo(null);
 
         jobManager.Dispose();
         await Task.Delay(50); // let background TPL work get done.

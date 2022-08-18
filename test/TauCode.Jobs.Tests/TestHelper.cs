@@ -1,12 +1,12 @@
 ﻿using Serilog;
 using TauCode.Infrastructure.Time;
+using TauCode.Working;
 
-// todo clean
 namespace TauCode.Jobs.Tests;
 
 internal static class TestHelper
 {
-    internal static readonly DateTimeOffset NeverCopy = new DateTimeOffset(9000, 1, 1, 0, 0, 0, TimeSpan.Zero);
+    internal static readonly DateTimeOffset NeverCopy = new(9000, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
     internal static async Task WaitUntil(DateTimeOffset now, DateTimeOffset moment, CancellationToken cancellationToken = default)
     {
@@ -22,7 +22,6 @@ internal static class TestHelper
     internal static IJobManager CreateJobManager(bool start, ILogger logger)
     {
         var jobManager = new JobManager(logger);
-        //jobManager.Logger = logger;
 
         if (start)
         {
@@ -30,7 +29,7 @@ internal static class TestHelper
 
             while (true)
             {
-                if (jobManager.IsRunning)
+                if (jobManager.State == WorkerState.Running)
                 {
                     break;
                 }
@@ -42,7 +41,6 @@ internal static class TestHelper
         return jobManager;
     }
 
-    // todo: use taucode.infra time machine.
     internal static async Task<bool> WaitUntilSecondsElapse(
         this ITimeProvider timeProvider,
         DateTimeOffset start,
@@ -55,7 +53,6 @@ internal static class TestHelper
         var elapsed = now - start;
         if (elapsed >= timeout)
         {
-            //return false;
             throw new InvalidOperationException("Too late.");
         }
 

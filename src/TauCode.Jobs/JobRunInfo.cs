@@ -51,7 +51,7 @@ public readonly struct JobRunInfo : IEquatable<JobRunInfo> // todo: remove this 
             Equals(Exception, other.Exception);
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return obj is JobRunInfo other && Equals(other);
     }

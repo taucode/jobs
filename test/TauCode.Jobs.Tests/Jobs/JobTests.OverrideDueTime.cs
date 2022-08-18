@@ -34,7 +34,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.IsEnabled = true;
 
@@ -142,7 +142,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.IsEnabled = true;
 
@@ -202,7 +202,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         // Act
         var ex = Assert.Throws<InvalidOperationException>(() => job.OverrideDueTime(start.AddSeconds(-1)));
@@ -250,7 +250,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.IsEnabled = true;
 
@@ -474,7 +474,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.IsEnabled = true;
 
@@ -550,7 +550,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.IsEnabled = true;
 
@@ -606,7 +606,7 @@ public partial class JobTests
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
         job.Dispose();
 
         // Act
@@ -642,7 +642,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.Schedule = new SimpleSchedule(SimpleScheduleKind.Second, 1, start);
 

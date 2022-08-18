@@ -13,7 +13,7 @@ public partial class JobTests
     {
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         // Act
         var isEnabled = job.IsEnabled;
@@ -47,7 +47,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.IsEnabled = true;
 
@@ -119,7 +119,7 @@ public partial class JobTests
     {
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
         job.IsEnabled = true;
 
         // Act
@@ -135,7 +135,7 @@ public partial class JobTests
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
         job.IsEnabled = true;
         job.IsEnabled = false;
 
@@ -152,7 +152,7 @@ public partial class JobTests
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
         job.IsEnabled = true;
         job.Dispose();
 
@@ -190,7 +190,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.IsEnabled = true;
 
@@ -246,7 +246,7 @@ public partial class JobTests
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
         job.Dispose();
 
         // Act
@@ -262,7 +262,7 @@ public partial class JobTests
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
         job.Dispose();
 
         // Act
