@@ -20,7 +20,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         // Act
         var output = job.Output;
@@ -39,7 +39,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         // Act
         TextWriter writer1 = new StringWriterWithEncoding(Encoding.UTF8);
@@ -77,7 +77,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         ISchedule schedule = new ConcreteSchedule(
             start.AddSeconds(1),
@@ -157,7 +157,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         ISchedule schedule = new ConcreteSchedule(
             start.AddSeconds(1),
@@ -211,7 +211,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         // Act
         var writer = new StringWriterWithEncoding(Encoding.UTF8);
@@ -232,7 +232,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         var writer1 = new StringWriterWithEncoding(Encoding.UTF8);
         var writer2 = new StringWriterWithEncoding(Encoding.UTF8);

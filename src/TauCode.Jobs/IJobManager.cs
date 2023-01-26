@@ -1,20 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using TauCode.Working;
 
 namespace TauCode.Jobs;
 
-public interface IJobManager : IDisposable
+public interface IJobManager : IWorker
 {
-    void Start();
+    IJob CreateJob(string jobName);
 
-    bool IsRunning { get; }
+    IReadOnlyList<string> GetJobNames();
 
-    bool IsDisposed { get; }
-
-    IJob Create(string jobName);
-
-    IReadOnlyList<string> GetNames();
-
-    IJob Get(string jobName);
-
-    ILogger Logger { get; set; }
+    IJob GetJob(string jobName);
 }

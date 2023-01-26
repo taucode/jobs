@@ -1,5 +1,8 @@
 dotnet restore
 
+dotnet clean --configuration Debug
+dotnet clean --configuration Release
+
 dotnet build --configuration Debug
 dotnet build --configuration Release
 

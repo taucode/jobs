@@ -20,7 +20,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         job.Schedule = new SimpleSchedule(SimpleScheduleKind.Second, 1, start.AddSeconds(2));
         job.IsEnabled = true;
@@ -69,7 +69,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         // Act
         var ex = Assert.Throws<ArgumentNullException>(() => job.Routine = null);
@@ -93,7 +93,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         var output = new StringWriterWithEncoding(Encoding.UTF8);
         job.Output = output;
@@ -150,6 +150,8 @@ public partial class JobTests
         }
         catch (Exception ex)
         {
+            // todo: get rid of these try/catch since all ut-s are green now [2022-08-15]
+
             var sb = new StringBuilder();
             sb.AppendLine("*** Test Failed ***");
             sb.AppendLine(ex.ToString());
@@ -173,7 +175,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         JobDelegate routine1 = async (parameter, tracker, output, token) =>
         {
@@ -212,7 +214,7 @@ public partial class JobTests
     {
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         var start = "2000-01-01Z".ToUtcDateOffset();
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -287,7 +289,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         var output = new StringWriterWithEncoding(Encoding.UTF8);
         job.Output = output;
@@ -364,7 +366,7 @@ public partial class JobTests
         using var source = new CancellationTokenSource();
         source.Cancel();
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         var output = new StringWriterWithEncoding(Encoding.UTF8);
         job.Output = output;
@@ -433,7 +435,7 @@ public partial class JobTests
     {
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         var start = "2000-01-01Z".ToUtcDateOffset();
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -506,7 +508,7 @@ public partial class JobTests
     {
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         var start = "2000-01-01Z".ToUtcDateOffset();
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
@@ -565,7 +567,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         JobDelegate routine1 = async (parameter, tracker, output, token) =>
         {
@@ -610,7 +612,7 @@ public partial class JobTests
         var timeMachine = ShiftedTimeProvider.CreateTimeMachine(start);
         TimeProvider.Override(timeMachine);
 
-        var job = jobManager.Create("my-job");
+        var job = jobManager.CreateJob("my-job");
 
         JobDelegate routine1 = async (parameter, tracker, output, token) =>
         {

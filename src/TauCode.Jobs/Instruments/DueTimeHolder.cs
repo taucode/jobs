@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Serilog;
 using TauCode.Infrastructure.Time;
 using TauCode.Jobs.Schedules;
 
@@ -17,13 +17,13 @@ internal class DueTimeHolder : IDisposable
     private readonly string _jobName;
 
     private readonly object _lock;
-    private readonly ILogger _logger;
+    private readonly ILogger? _logger;
 
     #endregion
 
     #region Constructor
 
-    internal DueTimeHolder(string jobName, ILogger logger)
+    internal DueTimeHolder(string jobName, ILogger? logger)
     {
         _logger = logger;
         _jobName = jobName;
@@ -105,11 +105,11 @@ internal class DueTimeHolder : IDisposable
         {
             if (_isDisposed)
             {
-                _logger.LogWarningEx(
-                    null,
-                    $"Rejected attempt to update schedule due time of an exposed '{this.GetType().FullName}'.",
-                    this.GetType(),
-                    nameof(UpdateScheduleDueTime));
+                _logger?.Warning(
+                    "Inside method '{0:l}'. Rejected attempt to update schedule due time of a disposed '{1}'.",
+                    nameof(UpdateScheduleDueTime),
+                    this.GetType().FullName);
+
                 return;
             }
 
@@ -118,19 +118,16 @@ internal class DueTimeHolder : IDisposable
                 _scheduleDueTime = _schedule.GetDueTimeAfter(now.AddTicks(1));
                 if (_scheduleDueTime < now)
                 {
-                    _logger.LogWarningEx(
-                        null,
-                        "Due time is earlier than current time. Due time is changed to 'never'.",
-                        this.GetType(),
+                    _logger?.Warning(
+                        "Inside method '{0:l}'. Due time is earlier than current time. Due time is changed to 'never'.",
                         nameof(UpdateScheduleDueTime));
+
                     _scheduleDueTime = JobExtensions.Never;
                 }
                 else if (_scheduleDueTime > JobExtensions.Never)
                 {
-                    _logger.LogWarningEx(
-                        null,
-                        "Due time is later than 'never'. Due time is changed to 'never'.",
-                        this.GetType(),
+                    _logger?.Warning(
+                        "Inside method '{0:l}'. Due time is later than 'never'. Due time is changed to 'never'.",
                         nameof(UpdateScheduleDueTime));
 
                     _scheduleDueTime = JobExtensions.Never;
@@ -141,10 +138,9 @@ internal class DueTimeHolder : IDisposable
             {
                 _scheduleDueTime = JobExtensions.Never;
 
-                _logger.LogWarningEx(
+                _logger?.Warning(
                     ex,
-                    "An exception was thrown on attempt to calculate due time. Due time is changed to 'never'.",
-                    this.GetType(),
+                    "Inside method '{0:l}'. An exception was thrown on attempt to calculate due time. Due time is changed to 'never'.",
                     nameof(UpdateScheduleDueTime));
             }
         }

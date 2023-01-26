@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Serilog;
 using System.Text;
 using TauCode.Infrastructure.Time;
 using TauCode.IO;
@@ -17,7 +17,7 @@ internal class RunContext
 
     private readonly Task _task;
 
-    private readonly ILogger _logger;
+    private readonly ILogger? _logger;
 
     #endregion
 
@@ -27,7 +27,7 @@ internal class RunContext
         Runner initiator,
         JobStartReason startReason,
         CancellationToken? token,
-        ILogger logger)
+        ILogger? logger)
     {
         _initiator = initiator;
         var jobProperties = _initiator.JobPropertiesHolder.ToJobProperties();
@@ -82,10 +82,9 @@ internal class RunContext
                 var ex = ExtractTaskException(_task.Exception);
                 multiTextWriter.WriteLine(ex);
 
-                _logger.LogWarningEx(
+                _logger?.Warning(
                     ex,
-                    "Routine has thrown an exception.",
-                    this.GetType(),
+                    "Inside method '{0:l}'. Routine has thrown an exception.",
                     "ctor");
 
                 _task = Task.FromException(ex);
@@ -96,10 +95,9 @@ internal class RunContext
             // it is not an error if Routine throws, but let's log it as a warning.
             multiTextWriter.WriteLine(ex);
 
-            _logger.LogWarningEx(
+            _logger?.Warning(
                 ex,
-                "Routine has thrown an exception.",
-                this.GetType(),
+                "Inside method '{0:l}'. Routine has thrown an exception.",
                 "ctor");
 
             _task = Task.FromException(ex);
@@ -112,11 +110,10 @@ internal class RunContext
 
     private void EndTask(Task task)
     {
-        _logger.LogDebugEx(
-            task.Exception?.InnerException,
-            $"Task ended. Status: {task.Status}",
-            this.GetType(),
-            nameof(EndTask));
+        _logger?.Debug(
+            "Inside method '{0:l}'. Task ended. Status: '{1}'.",
+            nameof(EndTask),
+            task.Status);
 
         JobRunStatus status;
         Exception exception = null;
