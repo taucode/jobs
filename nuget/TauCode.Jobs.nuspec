@@ -2,24 +2,24 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
   <metadata>
     <id>TauCode.Jobs</id>
-    <version>1.7.1-alpha.1.2023-01-26.11-39</version>
+    <version>1.8.1-alpha.1.2023-04-10.17-01</version>
     <authors>TauCode</authors>
     <owners>TauCode</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type="file">LICENSE</license>
-    <projectUrl>https://github.com/taucode/taucode.jobs</projectUrl>
-    <repository type="git" url="https://github.com/taucode/taucode.jobs"/>
+    <projectUrl>https://github.com/taucode/jobs</projectUrl>
+    <repository type="git" url="https://github.com/taucode/jobs"/>
     <description>
       TauCode scheduled jobs support.
     </description>
     <releaseNotes>
-      Developing release 1.7.1.
+      Developing release 1.8.1.
     </releaseNotes>
     <tags>taucode jobs schedule cron</tags>
     <dependencies>
       <group targetFramework=".NETCoreApp6.0">
-        <dependency id="TauCode.IO" version="1.7.0" />
-        <dependency id="TauCode.Working" version="1.7.0" />
+        <dependency id="TauCode.IO" version="1.8.1-alpha.1.2023-04-10.17-01" />
+        <dependency id="TauCode.Working" version="1.8.1-alpha.1.2023-04-10.17-01" />
       </group>
     </dependencies>
   </metadata>
