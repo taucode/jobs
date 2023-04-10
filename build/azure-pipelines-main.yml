@@ -10,53 +10,63 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-  solution: '**/*.sln'
+  solution: $(SolutionName)
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
-  packageName: '_set_by_task_'
   nuspecName: '_set_by_task_'
+  packageName: '_set_by_task_'
 
 steps:
 - task: NuGetToolInstaller@1
+  displayName: 'Install NuGet'
 
 - task: NuGetCommand@2
+  displayName: 'NuGet Restore'
   inputs:
-    restoreSolution: '$(solution)'
+    command: 'restore'
+    restoreSolution: $(solution)
+    feedsToUse: 'select'
 
 - task: VSBuild@1
+  displayName: 'Build Solution'
   inputs:
     solution: '$(solution)'
     msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
-#- task: VSTest@2
-#  inputs:
-#    platform: '$(buildPlatform)'
-#    configuration: '$(buildConfiguration)'
-
-#- task: DotNetCoreCLI@2
-#  displayName: 'Unit Tests'
-#  inputs:
-#    command: 'test'
+- task: DotNetCoreCLI@2
+  displayName: 'Unit Tests'
+  inputs:
+    command: 'test'
+    arguments: $(solution) -c Release
 
 - task: PowerShell@2
+  displayName: 'Set .nuspec file name'
   inputs:
     targetType: 'inline'
     script: |
       $a = cmd /r dir /b nuget\*.nuspec
       $echo_string = "##vso[task.setvariable variable=nuspecName]$a"
       echo $echo_string
+
+- task: PowerShell@2
+  displayName: 'Check .nuspec file name'
+  inputs:
+    targetType: 'inline'
+    script: |
       Write-Host "nuspecName is:"
       Write-Host $(nuspecName)
 
 - task: NuGetCommand@2
+  displayName: 'NuGet Pack'
   inputs:
     command: 'pack'
     packagesToPack: 'nuget\$(nuspecName)'
     versioningScheme: 'off'
 
 - task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifacts'
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     ArtifactName: 'drop'
