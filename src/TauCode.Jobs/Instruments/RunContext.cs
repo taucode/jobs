@@ -1,5 +1,5 @@
-﻿using Serilog;
-using System.Text;
+﻿using System.Text;
+using Serilog;
 using TauCode.Infrastructure.Time;
 using TauCode.IO;
 

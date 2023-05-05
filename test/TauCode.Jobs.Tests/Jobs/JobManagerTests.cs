@@ -5,7 +5,7 @@ using TauCode.Extensions;
 using TauCode.Infrastructure.Time;
 using TauCode.IO;
 using TauCode.Jobs.Schedules;
-using TauCode.Working;
+using TauCode.Working.Slavery;
 
 namespace TauCode.Jobs.Tests.Jobs;
 
@@ -44,7 +44,7 @@ public class JobManagerTests
         using IJobManager jobManager = new JobManager(_logger);
 
         // Assert
-        Assert.That(jobManager.State, Is.EqualTo(WorkerState.Stopped));
+        Assert.That(jobManager.State, Is.EqualTo(SlaveState.Stopped));
         Assert.That(jobManager.IsDisposed, Is.False);
 
         jobManager.Dispose();
@@ -64,7 +64,7 @@ public class JobManagerTests
         jobManager.Start();
 
         // Assert
-        Assert.That(jobManager.State, Is.EqualTo(WorkerState.Running));
+        Assert.That(jobManager.State, Is.EqualTo(SlaveState.Running));
         Assert.That(jobManager.IsDisposed, Is.False);
         Assert.That(jobManager.GetJobNames(), Has.Count.Zero);
 
@@ -83,7 +83,7 @@ public class JobManagerTests
         var ex = Assert.Throws<InvalidOperationException>(() => jobManager.Start())!;
 
         // Assert
-        Assert.That(ex.Message, Is.EqualTo("Cannot perform operation 'Start'. Worker state is 'Running'. Worker name is 'Mgr'."));
+        Assert.That(ex.Message, Is.EqualTo("Cannot perform operation 'Start'. Slave state is 'Running'. Slave name is 'Mgr'."));
         jobManager.Dispose();
     }
 
@@ -115,7 +115,7 @@ public class JobManagerTests
         using IJobManager jobManager = TestHelper.CreateJobManager(false, _logger);
 
         // Act
-        var isRunning = jobManager.State == WorkerState.Running;
+        var isRunning = jobManager.State == SlaveState.Running;
 
         // Assert
         Assert.That(isRunning, Is.False);
@@ -129,7 +129,7 @@ public class JobManagerTests
         jobManager.Start();
 
         // Act
-        var isRunning = jobManager.State == WorkerState.Running;
+        var isRunning = jobManager.State == SlaveState.Running;
 
         // Assert
         Assert.That(isRunning, Is.True);
@@ -145,7 +145,7 @@ public class JobManagerTests
         jobManager.Dispose();
 
         // Act
-        var isRunning = jobManager.State == WorkerState.Running;
+        var isRunning = jobManager.State == SlaveState.Running;
 
         // Assert
         Assert.That(isRunning, Is.False);
@@ -160,7 +160,7 @@ public class JobManagerTests
         jobManager.Dispose();
 
         // Act
-        var isRunning = jobManager.State == WorkerState.Running;
+        var isRunning = jobManager.State == SlaveState.Running;
 
         // Assert
         Assert.That(isRunning, Is.False);
