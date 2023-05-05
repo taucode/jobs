@@ -1,6 +1,6 @@
 ﻿using Serilog;
 using TauCode.Infrastructure.Time;
-using TauCode.Working;
+using TauCode.Working.Slavery;
 
 namespace TauCode.Jobs.Tests;
 
@@ -29,7 +29,7 @@ internal static class TestHelper
 
             while (true)
             {
-                if (jobManager.State == WorkerState.Running)
+                if (jobManager.State == SlaveState.Running)
                 {
                     break;
                 }

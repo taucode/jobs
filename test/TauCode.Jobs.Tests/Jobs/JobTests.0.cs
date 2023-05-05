@@ -1,6 +1,6 @@
-﻿using NUnit.Framework;
+﻿using System.Text;
+using NUnit.Framework;
 using Serilog;
-using System.Text;
 using TauCode.Infrastructure.Time;
 using TauCode.IO;
 
