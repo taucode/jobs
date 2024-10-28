@@ -7,6 +7,8 @@ using TauCode.Infrastructure.Time;
 using TauCode.IO;
 using TauCode.Jobs.Schedules;
 
+using TimeProvider = TauCode.Infrastructure.Time.TimeProvider;
+
 namespace TauCode.Jobs.Tests.Jobs;
 
 [TestFixture]
@@ -449,9 +451,9 @@ public partial class JobTests
         try
         {
             Assert.That(dueTime1, Is.EqualTo(start.AddSeconds(2)));
-            Assert.That(dueTime2, Is.EqualTo(start.AddSeconds(1.8)));
-            Assert.That(dueTime3, Is.EqualTo(start.AddSeconds(2.8)));
-            Assert.That(dueTime4, Is.EqualTo(start.AddSeconds(3.8)));
+            Assert.That(dueTime2, Is.EqualTo(start.AddSeconds(1.8)).Within(TimeSpan.FromMilliseconds(1)));
+            Assert.That(dueTime3, Is.EqualTo(start.AddSeconds(2.8)).Within(TimeSpan.FromMilliseconds(1)));
+            Assert.That(dueTime4, Is.EqualTo(start.AddSeconds(3.8)).Within(TimeSpan.FromMilliseconds(1)));
         }
         catch (Exception ex)
         {

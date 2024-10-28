@@ -1,7 +1,12 @@
-﻿2020-10-11
+﻿2023-05-05
 ==========
-    1. Consider this: https://www.paradigm.net.co/; https://www.nuget.org/packages/Paradigm.Services.WorkingTasks
+    1. Fix order of todos and changelog
 
 2022-08-18
 ==========
     1. Uncomment unit tests in dev YAML pipeline.
+
+2020-10-11
+==========
+    1. Consider this: https://www.paradigm.net.co/; https://www.nuget.org/packages/Paradigm.Services.WorkingTasks
+

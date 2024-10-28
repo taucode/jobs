@@ -3,6 +3,8 @@ using TauCode.Extensions;
 using TauCode.Infrastructure.Time;
 using TauCode.Jobs.Schedules;
 
+using TimeProvider = TauCode.Infrastructure.Time.TimeProvider;
+
 namespace TauCode.Jobs.Tests.Jobs;
 
 [TestFixture]
@@ -114,8 +116,8 @@ public partial class JobTests
         Assert.That(info.RunCount, Is.EqualTo(2));
         Assert.That(info.Runs, Has.Count.EqualTo(2));
 
-        CollectionAssert.AreEquivalent(new decimal[] { 0m, 20m, 40m, 60m, 80m }, tracker1.GetList());
-        CollectionAssert.AreEquivalent(new decimal[] { 0m, 20m, 40m, 60m, 80m }, tracker2.GetList());
+        Assert.That(tracker1.GetList(), Is.EquivalentTo(new decimal[] { 0m, 20m, 40m, 60m, 80m }));
+        Assert.That(tracker2.GetList(), Is.EquivalentTo(new decimal[] { 0m, 20m, 40m, 60m, 80m }));
     }
 
     /// <summary>
@@ -172,8 +174,8 @@ public partial class JobTests
         Assert.That(info.RunCount, Is.EqualTo(2));
         Assert.That(info.Runs, Has.Count.EqualTo(2));
 
-        CollectionAssert.AreEquivalent(new decimal[] { 0m, 20m, 40m, 60m, 80m }, tracker1.GetList());
-        CollectionAssert.AreEquivalent(new decimal[] { 0m, 20m, 40m, 60m, 80m }, tracker2.GetList());
+        Assert.That(tracker1.GetList(), Is.EquivalentTo(new decimal[] { 0m, 20m, 40m, 60m, 80m }));
+        Assert.That(tracker2.GetList(), Is.EquivalentTo(new decimal[] { 0m, 20m, 40m, 60m, 80m }));
     }
 
     [Test]

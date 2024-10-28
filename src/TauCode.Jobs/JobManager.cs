@@ -1,11 +1,13 @@
 ﻿using Serilog;
 using TauCode.Extensions;
 using TauCode.Infrastructure.Time;
-using TauCode.Working;
+using TauCode.Working.Slavery;
+
+using TimeProvider = TauCode.Infrastructure.Time.TimeProvider;
 
 namespace TauCode.Jobs;
 
-public class JobManager : LoopWorkerBase, IJobManager
+public class JobManager : LoopSlaveBase, IJobManager
 {
     #region Fields
 
@@ -47,7 +49,7 @@ public class JobManager : LoopWorkerBase, IJobManager
             throw new ObjectDisposedException(this.GetType().FullName);
         }
 
-        if (this.State != WorkerState.Running)
+        if (this.State != SlaveState.Running)
         {
             throw CreateCannotWorkException(operationName);
         }

@@ -1,8 +1,8 @@
-﻿using TauCode.Working;
+﻿using TauCode.Working.Slavery;
 
 namespace TauCode.Jobs;
 
-public interface IJobManager : IWorker
+public interface IJobManager : ISlave
 {
     IJob CreateJob(string jobName);
 

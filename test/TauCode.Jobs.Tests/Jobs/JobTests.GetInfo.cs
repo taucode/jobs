@@ -3,6 +3,8 @@ using TauCode.Extensions;
 using TauCode.Infrastructure.Time;
 using TauCode.Jobs.Schedules;
 
+using TimeProvider = TauCode.Infrastructure.Time.TimeProvider;
+
 namespace TauCode.Jobs.Tests.Jobs;
 
 [TestFixture]
@@ -448,8 +450,8 @@ public partial class JobTests
         Assert.That(currentG.Output, Is.EqualTo("schedule"));
         Assert.That(currentG.Exception, Is.Null);
 
-        CollectionAssert.AreEqual(infoF.Runs, infoG.Runs);
-
+        Assert.That(infoG.Runs, Is.EqualTo(infoF.Runs));
+        
         #endregion
 
         #region ^H - after schedule-due-time run completes
@@ -460,7 +462,7 @@ public partial class JobTests
         Assert.That(infoH.RunCount, Is.EqualTo(3));
         Assert.That(infoH.Runs, Has.Count.EqualTo(3));
 
-        CollectionAssert.AreEqual(infoG.Runs.Take(2), infoH.Runs.Take(2));
+        Assert.That(infoH.Runs.Take(2), Is.EqualTo(infoG.Runs.Take(2)));
 
         var infoHRun2 = infoH.Runs[2];
 
@@ -484,7 +486,7 @@ public partial class JobTests
         Assert.That(infoFinal.RunCount, Is.EqualTo(infoH.RunCount));
         Assert.That(infoFinal.Runs.Count, Is.EqualTo(infoH.Runs.Count));
 
-        CollectionAssert.AreEqual(infoH.Runs, infoFinal.Runs);
+        Assert.That(infoFinal.Runs, Is.EqualTo(infoH.Runs));
 
         #endregion
     }
