@@ -2,6 +2,8 @@
 using TauCode.Infrastructure.Time;
 using TauCode.Jobs.Schedules;
 
+using TimeProvider = TauCode.Infrastructure.Time.TimeProvider;
+
 namespace TauCode.Jobs.Instruments;
 
 internal class DueTimeHolder : IDisposable

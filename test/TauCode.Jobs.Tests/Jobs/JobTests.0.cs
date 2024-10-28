@@ -4,7 +4,11 @@ using Serilog;
 using TauCode.Infrastructure.Time;
 using TauCode.IO;
 
+using TimeProvider = TauCode.Infrastructure.Time.TimeProvider;
+
 namespace TauCode.Jobs.Tests.Jobs;
+
+#pragma warning disable NUnit1032
 
 [TestFixture]
 public partial class JobTests

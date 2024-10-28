@@ -2,6 +2,8 @@
 using TauCode.Extensions;
 using TauCode.Infrastructure.Time;
 
+using TimeProvider = TauCode.Infrastructure.Time.TimeProvider;
+
 namespace TauCode.Jobs.Tests.Jobs;
 
 [TestFixture]

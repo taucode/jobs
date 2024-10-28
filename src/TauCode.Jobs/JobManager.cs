@@ -3,6 +3,8 @@ using TauCode.Extensions;
 using TauCode.Infrastructure.Time;
 using TauCode.Working.Slavery;
 
+using TimeProvider = TauCode.Infrastructure.Time.TimeProvider;
+
 namespace TauCode.Jobs;
 
 public class JobManager : LoopSlaveBase, IJobManager
