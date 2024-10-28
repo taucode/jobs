@@ -3,6 +3,8 @@ using Serilog;
 using TauCode.Infrastructure.Time;
 using TauCode.IO;
 
+using TimeProvider = TauCode.Infrastructure.Time.TimeProvider;
+
 namespace TauCode.Jobs.Instruments;
 
 internal class RunContext

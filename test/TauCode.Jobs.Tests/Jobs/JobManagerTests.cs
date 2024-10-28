@@ -7,7 +7,11 @@ using TauCode.IO;
 using TauCode.Jobs.Schedules;
 using TauCode.Working.Slavery;
 
+using TimeProvider = TauCode.Infrastructure.Time.TimeProvider;
+
 namespace TauCode.Jobs.Tests.Jobs;
+
+#pragma warning disable NUnit1032
 
 [TestFixture]
 public class JobManagerTests
@@ -270,7 +274,7 @@ public class JobManagerTests
     [TestCase(null)]
     [TestCase("")]
     [TestCase(" ")]
-    public void Create_BadJobName_ThrowsArgumentException(string badJobName)
+    public void Create_BadJobName_ThrowsArgumentException(string? badJobName)
     {
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
@@ -344,7 +348,7 @@ public class JobManagerTests
         var jobNames = jobManager.GetJobNames();
 
         // Assert
-        CollectionAssert.AreEquivalent(new string[] { "job1", "job2" }, jobNames);
+        Assert.That(jobNames, Is.EquivalentTo(new string[] { "job1", "job2" }));
     }
 
     [Test]
@@ -401,7 +405,7 @@ public class JobManagerTests
     [TestCase(null)]
     [TestCase("")]
     [TestCase(" ")]
-    public void Get_BadJobName_ThrowsArgumentException(string badJobName)
+    public void Get_BadJobName_ThrowsArgumentException(string? badJobName)
     {
         // Arrange
         using IJobManager jobManager = TestHelper.CreateJobManager(true, _logger);
